@@ -1081,7 +1081,7 @@ function script.drawUI()
     if mainMenu == 0 then
 
         if car.speedKmh < 5 then
-            physics.setCarNoInput(true)
+            --physics.setCarNoInput(true)
         end
 
         if  menuState == 0 then
@@ -1939,7 +1939,7 @@ function script.drawUI()
 
         end
     else
-        physics.setCarNoInput(false)
+        --physics.setCarNoInput(false)
 
     end
 
