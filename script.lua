@@ -1138,7 +1138,7 @@ function script.drawUI()
                     --- OTHER PLAYERS ---
                     
 
-                    for i = 2, simstate.carsCount do
+                    for i = 22, simstate.carsCount do
                         playerCarStates = ac.getCarState(i)
                         if playerCarStates ~= nil and playerCarStates.isConnected then
                             carArrayX[i] = playerCarStates.position.x
