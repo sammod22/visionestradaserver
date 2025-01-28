@@ -21,6 +21,10 @@ local gforces = 0
 local blown = 0
 
 local died = 0
+local mortal = true
+local money = 30000
+local moneyTransfer = 0
+local moneyRecieved = 0
 
 local fuel = 10
 local oilAmount = 100
@@ -287,6 +291,24 @@ function script.update(dt)
         else
             oilOnFire = 0
         end
+
+
+        local chatMessageEvent = ac.OnlineEvent({
+            -- message structure layout:
+            message = ac.StructItem.string(50),
+            mood = ac.StructItem.float(),
+          }, function (sender, data)
+            -- got a message from other client (or ourselves; in such case `sender.index` would be 0):
+            ac.debug('Got message: from', sender and sender.index or -1)
+            ac.debug('Got message: text', data.message)
+            ac.debug('Got message: mood', data.mood)
+          end)
+
+-- sending a new message:
+
+--if ac.getDriverName(0) == '_935_ Sam S.' then
+--chatMessageEvent{ message = 'hello world', mood = 5 }
+--end
 
         ac.debug('enginedamage', car.engineLifeLeft)
         oilColor = rgbm(((oilQuality) * 0.0045 + ((car1.waterTemperature - 75)*0.001)),((oilQuality) * 0.004 + ((car1.waterTemperature - 75)*0.001)),0,0.8)
@@ -1052,7 +1074,8 @@ local oilSnapped = false
 local oilPouring = false
 local oilDraining = false
 
-local menuState = 0
+local menuState = 11
+local transferPersonType = 0
 
 local carArrayX = {}
 local carArrayZ = {}
@@ -1120,6 +1143,66 @@ function script.drawUI()
                     ui.setCursorY(29)
                     ui.textColored('MAIN MENU', rgbm(0.8,0,1,1))
 
+                    --- MONEY ---
+
+                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
                     --- SRP MAP ---
 
                     ui.setCursorX(uiState.windowSize.y / 2 + 100)
@@ -1172,20 +1255,26 @@ function script.drawUI()
 
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(65 + 2)
+                    ui.setCursorX(95 + 2)
                     ui.setCursorY(215 + 2)
-                    ui.textColored('MORE SOON', rgbm(0.1,0.8,1,0.7))
+                    ui.textColored('FINANCES', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(65 + 1)
+                    ui.setCursorX(95 + 1)
                     ui.setCursorY(215 + 1)
-                    ui.textColored('MORE SOON', rgbm(0.8,0,1,1))
+                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(65)
+                    ui.setCursorX(95)
                     ui.setCursorY(215)
-                    ui.textColored('MORE SOON', rgbm(0.8,0,1,1))
+                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
 
+                    ui.setCursorX(30)
+                    ui.setCursorY(185)
+
+                    if ui.invisibleButton('money', vec2(340,130)) then
+                        menuState = 4
+                    end
 
 
                     ui.setCursorX(0)
@@ -1319,6 +1408,26 @@ function script.drawUI()
 
                     ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
 
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
 
                     --- SETTINGS ---
 
@@ -1341,6 +1450,43 @@ function script.drawUI()
                     ui.setCursorX(uiState.windowSize.y / 2 + 300)
                     ui.setCursorY(29)
                     ui.textColored('SETTINGS', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.setCursorX(0)
                     ui.setCursorY(100)
@@ -1475,6 +1621,26 @@ function script.drawUI()
 
                     ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
 
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
 
                     --- SERVICES ---
 
@@ -1497,6 +1663,43 @@ function script.drawUI()
                     ui.setCursorX(uiState.windowSize.y / 2 + 302)
                     ui.setCursorY(29)
                     ui.textColored('SERVICES', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.setCursorX(0)
                     ui.setCursorY(100)
@@ -1633,8 +1836,28 @@ function script.drawUI()
 
                     ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
 
+                    if mortal then
 
-                    --- SERVICES ---
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- ENGINE ---
 
                     ui.setCursorX(uiState.windowSize.y / 2 + 150)
                     ui.setCursorY(-190)
@@ -1656,7 +1879,42 @@ function script.drawUI()
                     ui.setCursorY(29)
                     ui.textColored('ENGINE', rgbm(0.8,0,1,1))
 
+                    --- MONEY ---
 
+                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
 
                     if not sticktoggled then
@@ -1928,6 +2186,601 @@ function script.drawUI()
 
                     if ui.invisibleButton('', vec2(340,130)) then
                         menuState = 0
+                    end
+
+
+                end)
+
+
+            end)
+
+
+        elseif menuState == 4 then
+
+            ui.toolWindow('MONEYS', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('Money', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- SERVICES ---
+
+                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('FINANCES', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y / 2 + 292)
+                    ui.setCursorY(29)
+                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+
+                    ui.setCursorX(0)
+                    ui.setCursorY(100)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(59 + 2)
+                    ui.setCursorY(215 + 2)
+                    ui.textColored('TRANSFER cr.', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(59 + 1)
+                    ui.setCursorY(215 + 1)
+                    ui.textColored('TRANSFER cr.', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(59)
+                    ui.setCursorY(215)
+                    ui.textColored('TRANSFER cr.', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(30)
+                    ui.setCursorY(185)
+
+                    if ui.invisibleButton('transfer', vec2(340,130)) then
+                        menuState = 11
+                    end
+
+
+                    --- BACK ---
+
+                    ui.setCursorX(uiState.windowSize.x - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.x - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(uiState.windowSize.x - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 0
+                    end
+
+
+                end)
+
+
+            end)
+
+
+        elseif menuState == 11 then
+
+            ui.toolWindow('TRANSFER', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('Transfers', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- SERVICES ---
+
+                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TRANSFER', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TRANSFER', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y / 2 + 292)
+                    ui.setCursorY(29)
+                    ui.textColored('TRANSFER', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+                    --- MONEY AMOUNT TRANSFER ---
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 175)
+                    ui.setCursorY(-25)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 152 + 2)
+                    ui.setCursorY(58 + 2)
+                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 152 + 1)
+                    ui.setCursorY(58 + 1)
+                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 152)
+                    ui.setCursorY(58)
+                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 195 + 2)
+                    ui.setCursorY(65 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 195 + 1)
+                    ui.setCursorY(65 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 195)
+                    ui.setCursorY(65)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    --- +1 ---
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 450)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 235 + 2)
+                    ui.setCursorY(155 + 2)
+                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 235 + 1)
+                    ui.setCursorY(155 + 1)
+                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 235)
+                    ui.setCursorY(155)
+                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 220 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 507 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+1', vec2(40,40)) and moneyTransfer < money then
+                        moneyTransfer = moneyTransfer + 1
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 260 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 553 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-1', vec2(40,40)) and moneyTransfer > 0 then
+                        moneyTransfer = moneyTransfer - 1
+                    end
+
+
+                    --- +10 ---
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 350)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 140 + 2)
+                    ui.setCursorY(155 + 2)
+                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 140 + 1)
+                    ui.setCursorY(155 + 1)
+                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 140)
+                    ui.setCursorY(155)
+                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 120 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 407 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+10', vec2(40,40)) and moneyTransfer < money - 9 then
+                        moneyTransfer = moneyTransfer + 10
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 160 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 453 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-10', vec2(40,40)) and moneyTransfer > 9 then
+                        moneyTransfer = moneyTransfer - 10
+                    end
+
+                    --- +100 ---
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 250)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 50 + 2)
+                    ui.setCursorY(155 + 2)
+                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 50 + 1)
+                    ui.setCursorY(155 + 1)
+                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 50)
+                    ui.setCursorY(155)
+                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 20 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+                    
+                    ui.setCursorX(uiState.windowSize.y/2 + 307 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+100', vec2(40,40)) and moneyTransfer < money - 99 then
+                        moneyTransfer = moneyTransfer + 100
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 60 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 353 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-100', vec2(40,40)) and moneyTransfer > 99 then
+                        moneyTransfer = moneyTransfer - 100
+                    end
+
+
+                    --- +1000 ---
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 150)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 - 48 + 2)
+                    ui.setCursorY(157 + 2)
+                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 - 48 + 1)
+                    ui.setCursorY(157 + 1)
+                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 - 48)
+                    ui.setCursorY(157)
+                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 - 80 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 207 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+1000', vec2(40,40)) and moneyTransfer < money - 999 then
+                        moneyTransfer = moneyTransfer + 1000
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 - 42 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 253 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-1000', vec2(40,40)) and moneyTransfer > 999 then
+                        moneyTransfer = moneyTransfer - 1000
+                    end
+
+
+                    --- MONEY TRANSFER PERSON ---
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 80)
+                    ui.setCursorY(225)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(650,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 175)
+                    ui.setCursorY(437 + 2)
+                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 175)
+                    ui.setCursorY(437 + 1)
+                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 175)
+                    ui.setCursorY(437)
+                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 300 + 2)
+                    ui.setCursorY(405 + 2)
+                    ui.dwriteTextAligned('NEXT', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.5,0.5,0.5,1))
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 460)
+                    ui.setCursorY(525 + 2)
+
+                    --22
+
+                    if transferPersonType < simstate.connectedCars - 1 then
+                        if ui.invisibleButton('next', vec2(200,100)) then
+                            transferPersonType = transferPersonType + 1
+                        end
+                    end
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 150)
+                    ui.setCursorY(525 + 2)
+
+                    if transferPersonType > 0 then
+                        if ui.invisibleButton('previous', vec2(250,100)) then
+                            transferPersonType = transferPersonType - 1
+                        end
+                    end
+
+                    ui.setCursorX(uiState.windowSize.y/2 + 300)
+                    ui.setCursorY(655 + 2)
+
+
+                    local transferMoney = ac.OnlineEvent({
+                        -- message structure layout:
+                        person = ac.StructItem.float(),
+                        money = ac.StructItem.float(),
+                      }, function (sender, data)
+                        -- got a message from other client (or ourselves; in such case `sender.index` would be 0):
+                        if ac.getDriverName(transferPersonType) == ac.getDriverName(1) then
+                            ac.debug('Got message: from', sender and sender.index or -1)
+                            ac.debug('Got message: text', data.person)
+                            ac.debug('Got message: mood', data.money)
+                        end
+                      end)
+
+                    if ui.button('TRANSFER', vec2(250,100)) then
+                        
+                        transferMoney{ person = transferPersonType , money = moneyTransfer }
+
+                    end
+
+                    if moneyRecieved > 0 then
+                        money = money + moneyRecieved
+                    end
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.y/2 + 60 + 2)
+                    ui.setCursorY(405 + 2)
+                    ui.dwriteTextAligned('PREVIOUS', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.5,0.5,0.5,1))
+
+
+                    --- BACK ---
+
+                    ui.setCursorX(uiState.windowSize.x - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(uiState.windowSize.x - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(uiState.windowSize.x - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 4
                     end
 
 
