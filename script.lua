@@ -25,6 +25,7 @@ local mortal = true
 local money = 30000
 local moneyTransfer = 0
 local moneyRecieved = 0
+local confirmCarPurchase = false
 
 local fuel = 10
 local oilAmount = 100
@@ -54,6 +55,80 @@ local carOrientation = vec3(0, 0, 0)
 
 local mapType = 0
 
+function StorageUnpack(data,items,isnumber) --since ac storage doesn't support tables, this is a function that unpacks a string into a table, so it can be used
+    local storedVals = {}
+    for i=1,items do
+        if isnumber then
+            storedVals[i] = tonumber(string.split(data,'/')[i])
+        else
+            storedVals[i] = string.split(data,'/')[i]
+        end
+    end
+    return storedVals
+end
+
+function StorageUnpackUsedMarketNested(data,items) --same thing but with nested tables
+    local storedVals = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}}
+    local k = 1 --just a simple iterator over the string
+    for i=1,50 do
+        for j=0,3 do
+            storedVals[i][j] = string.split(data,'/')[k]
+            k = k+1
+        end
+    end
+    return storedVals
+end
+
+function StorageUnpackCarCollectionNested(data,items) --same thing but with nested tables
+    local storedVals = {}
+    local k = 1 --just a simple iterator over the string
+    for i=0,items - 1 do
+        storedVals [i] = {}
+        for j=0,3 do
+            storedVals[i][j] = string.split(data,'/')[k]
+            k = k+1
+        end
+    end
+    return storedVals
+end
+
+function StoragePack(data) --prepairing string to store
+    local storedString = ""
+    for i=1, #data do
+        storedString = storedString .. data[i]
+        if i ~= #data then
+            storedString = storedString .. "/"  
+        end
+    end
+    return storedString
+end
+
+function StoragePackUsedMarketNested(data) --same thing but with nested tables
+    local storedString = ""
+    for i=1, 50 do
+        for j=0,3 do
+            storedString = storedString .. data[i][j]
+            if i*j ~= 200 then --eh, it works
+                storedString = storedString .. "/" 
+            end
+        end
+    end
+    return storedString
+end
+
+function StoragePackCarCollectionNested(data,items) --same thing but with nested tables
+    local storedString = ""
+    for i=0, items - 1 do
+        for j=0,3 do
+            storedString = storedString .. data[i][j]
+            if i*j ~= 200 then --eh, it works
+                storedString = storedString .. "/" 
+            end
+        end
+    end
+    return storedString
+end
+
 local storedValues = ac.storage{
 	died = 0,
     fuel = 10,
@@ -81,11 +156,481 @@ local storedValues = ac.storage{
     engineDamage = 1000,
     oilAmount = 100,
     oilQuality = 100,
-    tempEnabled = 0
+    tempEnabled = 0,
+    usedMarket = '',
+    tableCount = -1,
+    usedMarketExpires = '',
+    carCollectionAmount = 0,
+    carCollection = '',
+    carCollectionState = ''
 }
+
+--- TIRE ARRAY KEY ---
+--- 
+--- NAME, AMOUNT OF SIZES, SIZE
+
+local tireArray = {
+
+-- BRIDGESTONE --
+
+{'Bridgestone Potenza RE050A', 17, '205/45/R17', 400, '235/40/ZR18', 1150, '245/45/R18', 1150, '265/40/ZR18', 1500, '235/35/ZR19', 1300, '235/40/R19', 1350, '235/40/ZR19', 1300, '245/40/R19', 1300, '245/40/ZR19', 1350, '265/35/ZR19', 1650, '265/35/R19', 1450, '275/35/R19', 1500, '285/35/ZR19', 1650, '285/40/ZR19', 1700, '295/30/ZR19', 1550, '305/30/ZR19', 1800, '285/35/R20', 1750},
+{'Bridgestone Potenza RE050A RFT', 9, '205/45/R17', 1050, '215/40/R18', 1500, '245/35/R18', 1200, '225/35/R19', 1500, '245/40/R19', 1700, '255/30/R19', 1550, '275/35/R19', 1800, '245/35/R20', 1350, '275/30/R20', 1750},
+{'Bridgestone Potenza S001', 13, '205/45/R17', 850, '225/35/R18', 750, '225/40/R18', 650, '245/35/R18', 600, '245/40/R18', 950, '245/35/R19', 1200, '255/35/R19', 900, '215/45/R20', 1700, '245/40/R20', 1450, '245/40/ZR20', 1350, '255/35/R20', 1650, '275/30/R20', 1550, '295/35/ZR20', 2000},
+
+-- MICHELIN --
+
+{'Michelin Primacy HP', 1, '245/40/R17', 1000},
+{'Michelin Pilot Sport 2', 18, '205/55/R17', 1200, '225/45/ZR17', 1050, '235/50/ZR17', 1250, '255/40/ZR17', 1500, '225/40/ZR18', 1100, '235/40/ZR18', 1050, '265/35/ZR18', 1450, '265/40/ZR18', 1550, '285/30/ZR18', 2050, '295/30/ZR18', 1950, '295/35/ZR18', 2300, '235/35/ZR19', 1450, '255/40/ZR19', 1600, '265/35/ZR19', 1700, '295/30/ZR19', 1950, '305/30/ZR19', 2100, '275/45/ZR20', 2050},
+{'Michelin Pilot Sport 4', 28, '205/55/ZR16', 750, '205/40/ZR18', 1000, '215/40/R18', 1050, '225/40/ZR18', 800, '235/40/ZR18', 950, '235/45/ZR18', 1000, '245/40/ZR18', 950, '225/40/ZR19', 1100, '225/55/R19', 1100, '235/45/ZR19', 1150, '245/40/R19', 1250, '245/45/ZR19', 1350, '245/45/R19', 1300, '255/35/ZR19', 1150, '255/40/R19', 1350, '255/45/R19', 1350, '265/45/ZR19', 1500, '275/40/ZR19', 1550, '275/45/R19', 1600, '295/40/ZR19', 1550, '245/45/R20', 1350, '255/40/R20', 1600, '275/40/ZR20', 1500, '285/40/R20', 1700, '315/35/ZR20', 2500, '275/35/ZR21', 2100, '315/30/ZR21', 2500, '325/30/ZR21', 2200},
+
+{'Michelin Pilot Super Sport', 1, '', 0}
+
+
+
+}
+
+local usedMarket = {}
+local usedMarketExpires = {}
+
+local carCollectionAmount = 0
+local carCollection = {}
+local carCollectionState = {}
 
 local fpsClock = os.clock()
 local initialLaunch = false
+--- CAR ARRAY KEY ---
+--- 
+--- NAME, TRANSMISSION, LOW PRICE, HIGH PRICE, RARITY, SKIN AMOUNT, SKIN NAME, SKIN RARITY
+--- 
+--- production number key - amount to put in
+--- less than 50 - 1; 100 - 2; 1,000 - 5; 5,000 - 10; 10,000 - 20; 20,000 - 30; 50,000 - 40; 100,000 - 60; 500,000 - 80; over 1,000,000 - 100
+
+local carArray = {
+
+--- HONDA ---
+
+{'1995 Honda Acty SDX (HA3)', 'Manual', 1000, 5000, 30, 2, 'Tahuta White', 95, 'Bay Blue', 5},
+{'1995 Honda Acty SDX (HA3)', 'Automatic', 1000, 5000, 7, 2, 'Tahuta White', 95, 'Bay Blue', 5},
+{'1995 Honda Acty STD (HA3)', 'Manual', 1000, 5000, 7, 2, 'Tahuta White', 95, 'Bay Blue', 5},
+{'1995 Honda Acty SDX (HA4)', 'Manual', 1000, 5000, 30, 2, 'Tahuta White', 95, 'Bay Blue', 5},
+
+{'1995 Honda Integra SIR-G (DC2)', 'Manual', 8000, 20000, 22, 8, 'Frost White', 17, 'Vogue Silver Metallic', 5, 'Starlight Black Pearl', 27, 'Milano Red', 29, 'Matador Red Pearl', 2, 'Cypress Green Pearl', 12, 'Adriatic Blue Pearl', 4, 'Dark Currant Pearl', 2},
+{'1995 Honda Integra SIR-G (DC2)', 'Automatic', 6000, 15000, 7, 8, 'Frost White', 17, 'Vogue Silver Metallic', 5, 'Starlight Black Pearl', 27, 'Milano Red', 29, 'Matador Red Pearl', 2, 'Cypress Green Pearl', 12, 'Adriatic Blue Pearl', 4, 'Dark Currant Pearl', 2},
+{'1995 Honda Integra Type R (DC2)', 'Manual', 10000, 40000, 18, 4, 'Championship White [Black Recaro Seats]', 40, 'Milano Red [Black Recaro Seats]', 10, 'Championship White [Red Recaro Seats]', 40, 'Milano Red [Red Recaro Seats]', 10},
+{'1995 Honda Integra Type R (DC2) [Safety Package]', 'Manual', 20000, 50000, 5, 4, 'Championship White [Black Recaro Seats]', 40, 'Milano Red [Black Recaro Seats]', 10, 'Championship White [Red Recaro Seats]', 40, 'Milano Red [Red Recaro Seats]', 10},
+{'1998 Honda Integra SIR-G (DC2)', 'Manual', 8000, 20000, 18, 9, 'Frost White', 17, 'Vogue Silver Metallic', 5, 'Lightning Silver Metallic', 3, 'Starlight Black Pearl', 26, 'Milano Red', 30, 'Burning Red Pearl', 3, 'Cypress Green Pearl', 12, 'Super Sonic Blue Pearl', 3, 'Adriatic Blue Pearl', 3},
+{'1998 Honda Integra SIR-G (DC2)', 'Automatic', 6000, 15000, 6, 9, 'Frost White', 17, 'Vogue Silver Metallic', 5, 'Lightning Silver Metallic', 3, 'Starlight Black Pearl', 26, 'Milano Red', 30, 'Burning Red Pearl', 3, 'Cypress Green Pearl', 12, 'Super Sonic Blue Pearl', 3, 'Adriatic Blue Pearl', 3},
+{'1998 Honda Integra Type R (DC2)', 'Manual', 15000, 50000, 9, 8, 'Championship White [Black Recaro Seats]', 41, 'Vogue Silver Metallic [Black Recaro Seats]', 3, 'Starlight Black Pearl [Black Recaro Seats]', 3, 'Milano Red [Black Recaro Seats]', 3, 'Championship White [Red Recaro Seats]', 41, 'Vogue Silver Metallic [Red Recaro Seats]', 3, 'Starlight Black Pearl [Red Recaro Seats]', 3, 'Milano Red [Red Recaro Seats]', 3},
+{'1998 Honda Integra Type R (DC2) [Safety Package]', 'Manual', 20000, 50000, 6, 8, 'Championship White [Black Recaro Seats]', 41, 'Vogue Silver Metallic [Black Recaro Seats]', 3, 'Starlight Black Pearl [Black Recaro Seats]', 3, 'Milano Red [Black Recaro Seats]', 3, 'Championship White [Red Recaro Seats]', 41, 'Vogue Silver Metallic [Red Recaro Seats]', 3, 'Starlight Black Pearl [Red Recaro Seats]', 3, 'Milano Red [Red Recaro Seats]', 3},
+{'2000 Honda Integra Type R (DC2)', 'Manual', 20000, 40000, 7, 10, 'Championship White [Black Recaro Seats]', 40, 'Vogue Silver Metallic [Black Recaro Seats]', 2, 'Starlight Black Pearl [Black Recaro Seats]', 2, 'Milano Red [Black Recaro Seats]', 2, 'Sunlight Yellow [Black Recaro Seats]', 2, 'Championship White [Red Recaro Seats]', 40, 'Vogue Silver Metallic [Red Recaro Seats]', 2, 'Starlight Black Pearl [Red Recaro Seats]', 2, 'Milano Red [Red Recaro Seats]', 2, 'Sunlight Yellow [Yellow Recaro Seats]', 2},
+{'2000 Honda Integra Type R X (DC2)', 'Manual', 15000, 40000, 6, 10, 'Championship White [Black Recaro Seats]', 40, 'Vogue Silver Metallic [Black Recaro Seats]', 2, 'Starlight Black Pearl [Black Recaro Seats]', 2, 'Milano Red [Black Recaro Seats]', 2, 'Sunlight Yellow [Black Recaro Seats]', 2, 'Championship White [Red Recaro Seats]', 40, 'Vogue Silver Metallic [Red Recaro Seats]', 2, 'Starlight Black Pearl [Red Recaro Seats]', 2, 'Milano Red [Red Recaro Seats]', 2, 'Sunlight Yellow [Yellow Recaro Seats]', 2},
+
+{'1999 Honda S2000 (AP1)', 'Manual', 15000, 40000, 18, 6, 'Silverstone Metallic', 36, 'Monte Carlo Blue Pearl', 8, 'Grand Prix White', 15, 'Indy Yellow Pearl', 21, 'New Formula Red', 15, 'Berlina Black', 16},
+{'2001 Honda S2000 (AP1)', 'Manual', 15000, 40000, 20, 13, 'Silverstone Metallic', 17, 'Midnight Pearl', 2, 'Monte Carlo Blue Pearl', 10, 'Grand Prix White', 15, 'Indy Yellow Pearl', 7, 'New Formula Red', 6, 'Berlina Black', 12, 'Nurburgring Blue Pearl', 2, 'Plantinum White Pearl', 2, 'Sebring Silver Metallic', 25, 'New Imola Orange Pearl', 3, 'Lime Green Metallic', 2, 'Monza Red Pearl', 2},
+{'2004 Honda S2000 (AP1)', 'Manual', 20000, 45000, 15, 13, 'Moon Rock Metallic', 3, 'Silverstone Metallic', 13, 'Sebring Silver Metallic', 16, 'Nurburgring Blue Metallic', 5, 'Royal Navy Blue Pearl', 5, 'Lime Green Metallic', 2, 'New Indy Yellow Pearl', 8, 'New Imola Orange Pearl', 5, 'New Formula Red', 8, 'Monza Red Pearl', 2, 'Platinum White Pearl', 2, 'Grand Prix White', 18, 'Berlina Black', 13},
+{'2006 Honda S2000 (AP2)', 'Manual', 20000, 45000, 11, 11, 'Grand Prix White', 14, 'Sebring Silver Metallic', 14, 'Silverstone Metallic', 19, 'Moon Rock Metallic', 2, 'Deep Burgundy Metallic', 5, 'Berlina Black', 13, 'Royal Navy Blue Pearl', 11, 'Nurburgring Blue Pearl', 7, 'Bermuda Blue Pearl', 2, 'New Indy Yellow Pearl', 8, 'New Formula Red', 10},
+{'2008 Honda S2000 (AP2)', 'Manual', 25000, 55000, 7, 9, 'Grand Prix White', 15, 'New Indy Yellow Pearl', 10, 'New Formula Red', 12, 'Synchro Silver Metallic', 25, 'Moon Rock Metallic', 4, 'Bermuda Blue Pearl', 3, 'Berlina Black', 18, 'Plantinum White Pearl', 4, 'Premium Sunset Mauve Pearl', 9},
+
+--- MAZDA ---
+
+{'1989 Eunos Roadster (NA)', 'Manual', 10000, 30000, 1, 4, 'Classic Red', 57, 'Crystal White', 24, 'Silver Stone Metallic Red', 1, 'Mariner Blue', 13},
+{'1989 Eunos Roadster (NA) [Special Package]', 'Manual', 6000, 20000, 29, 4, 'Classic Red', 47, 'Crystal White', 24, 'Silver Stone Metallic Red', 12, 'Mariner Blue', 10},
+{'1991 Eunos Roadster (NA)', 'Manual', 10000, 30000, 1, 4, 'Classic Red', 47, 'Crystal White', 24, 'Silver Stone Metallic Red', 12, 'Mariner Blue', 10},
+{'1991 Eunos Roadster J-Limited (NA)', 'Manual', 10000, 30000, 6, 1, 'Sunburst Yellow', 1},
+{'1991 Eunos Roadster (NA) [Special Package]', 'Manual', 6000, 20000, 29, 4, 'Classic Red', 47, 'Crystal White', 24, 'Silver Stone Metallic Red', 12, 'Mariner Blue', 10},
+{'1991 Eunos Roadster (NA) [Special Package]', 'Automatic', 4000, 16000, 10, 4, 'Classic Red', 47, 'Crystal White', 24, 'Silver Stone Metallic Red', 12, 'Mariner Blue', 10},
+{'1991 Eunos Roadster V-Special (NA)', 'Manual', 6000, 25000, 18, 2, 'British Racing Green', 40, 'Brilliant Black', 60},
+{'1995 Eunos Roadster (NA) [Special Package]', 'Manual', 8000, 25000, 20, 4, 'Classic Red', 48, 'Chaste White', 48, 'Silver Stone Metallic Red', 14, 'Brilliant Black', 29},
+{'1995 Eunos Roadster (NA) [Special Package]', 'Automatic', 6000, 20000, 5, 4, 'Classic Red', 48, 'Chaste White', 48, 'Silver Stone Metallic Red', 14, 'Brilliant Black', 29},
+{'1995 Eunos Roadster S-Special (NA)', 'Manual', 10000, 27000, 7, 3, 'Laguna Blue Metallic', 10, 'Chaste White', 55, 'Brilliant Black', 35},
+{'1995 Eunos Roadster V-Special (NA)', 'Manual', 7000, 25000, 12, 3, 'Neo Green', 25, 'Chaste White', 35, 'Brilliant Black', 40},
+{'1995 Eunos Roadster V-Special Type-II (NA)', 'Manual', 7000, 25000, 5, 3, 'Neo Green', 25, 'Chaste White', 35, 'Brilliant Black', 40},
+
+{'1999 Mazda RX-7 Type R (FD)', 'Manual', 30000, 50000, 5, 5, 'Innocent Blue Mica', 41, 'Highlight Silver Metallic', 8, 'Brilliant Black', 14, 'Chaste White', 29, 'Vintage Red II', 7},
+{'1999 Mazda RX-7 Type RB (FD)', 'Manual', 30000, 50000, 4, 5, 'Innocent Blue Mica', 35, 'Highlight Silver Metallic', 16, 'Brilliant Black', 15, 'Chaste White', 25, 'Vintage Red II', 9},
+{'1999 Mazda RX-7 Type RB (FD)', 'Automatic', 30000, 50000, 3, 5, 'Innocent Blue Mica', 35, 'Highlight Silver Metallic', 16, 'Brilliant Black', 15, 'Chaste White', 25, 'Vintage Red II', 9},
+{'1999 Mazda RX-7 Type RS (FD)', 'Manual', 35000, 60000, 7, 5, 'Innocent Blue Mica', 44, 'Highlight Silver Metallic', 9, 'Brilliant Black', 15, 'Chaste White', 24, 'Vintage Red II', 8},
+{'2000 Mazda RX-7 Type RZ (FD)', 'Manual', 50000, 90000, 3, 1, 'Snow White Pearl Mica', 1},
+{'2001 Mazda RX-7 Type R Bathurst R (FD)', 'Manual', 30000, 90000, 4, 3, 'Innocent Blue Mica', 30, 'Sunburst Yellow', 42, 'Pure White', 28},
+{'2002 Mazda RX-7 Spirit R Type A (FD)', 'Manual', 50000, 130000, 5, 5, 'Innocent Blue Mica', 14, 'Titanium Grey', 48, 'Brilliant Black', 11, 'Pure White', 22, 'Vintage Red II', 5},
+{'2002 Mazda RX-7 Spirit R Type B (FD)', 'Manual', 40000, 80000, 3, 5, 'Innocent Blue Mica', 15, 'Titanium Grey', 48, 'Brilliant Black', 13, 'Pure White', 19, 'Vintage Red II', 6},
+{'2002 Mazda RX-7 Spirit R Type C (FD)', 'Automatic', 25000, 45000, 1, 5, 'Innocent Blue Mica', 18, 'Titanium Grey', 50, 'Brilliant Black', 8, 'Pure White', 23, 'Vintage Red II', 3},
+{'2002 Mazda RX-7 Type R Bathurst (FD)', 'Manual', 30000, 60000, 6, 5, 'Innocent Blue Mica', 36, 'Titanium Grey', 8, 'Brilliant Black', 14, 'Pure White', 31, 'Vintage Red II', 10},
+
+--- MITSUBISHI ---
+
+--{'1996 Mitsubishi Lancer GSR Evolution IV', 'Manual', 10000, 30000, 22, 5, 'Scotia White', 50, 'Steel Silver', 15, 'Pyrenees Black', 17, 'Palma Red', 7, 'Icecelle Blue', 15},
+--{'1996 Mitsubishi Lancer RS Evolution IV', 'Manual', 15000, 40000, 5, 1, 'Scotia White', 1},
+{'1998 Mitsubishi Lancer GSR Evolution V', 'Manual', 20000, 40000, 13, 5, 'Scotia White', 50, 'Satellite Silver', 15, 'Pyrenees Black', 17, 'Palma Red', 7, 'Dandelion Yellow', 15},
+{'1998 Mitsubishi Lancer RS Evolution V', 'Manual', 25000, 70000, 3, 1, 'Scotia White', 1},
+{'1999 Mitsubishi Lancer GSR Evolution VI', 'Manual', 15000, 35000, 13, 5, 'Scotia White', 45, 'Satellite Silver', 15, 'Pyrenees Black', 15, 'Lance Blue', 10, 'Icecelle Blue', 15},
+{'1999 Mitsubishi Lancer RS Evolution VI', 'Manual', 25000, 70000, 3, 1, 'Scotia White', 1},
+{'2000 Mitsubishi Lancer GSR Evolution VI Tommi Makinen Edition', 'Manual', 30000, 80000, 7, 5, 'Scotia White', 47, 'Satellite Silver', 17, 'Pyrenees Black', 10, 'Canal Blue', 19, 'Passion Red', 6},
+{'2000 Mitsubishi Lancer GSR Evolution VI Tommi Makinen Edition Special Color Package', 'Manual', 40000, 220000, 3, 1, 'Passion Red', 1},
+{'2000 Mitsubishi Lancer RS Evolution VI Tommi Makinen Edition', 'Manual', 25000, 70000, 2, 1, 'Scotia White', 1},
+
+{'2003 Mitsubishi Lancer Evolution VIII GSR', 'Manual', 15000, 30000, 11, 6, 'Red Solid', 8, 'Yellow Solid', 6, 'Medium Purple Mica', 7, 'White Solid', 35, 'Cool Silver Metallic', 26, 'Black Mica', 20},
+{'2004 Mitsubishi Lancer Evolution VIII MR GSR', 'Manual', 15000, 35000, 8, 4, 'Medium Purplish Gray Mica', 48, 'Cool Silver Metallic', 21, 'White Pearl', 24, 'Red Solid', 7},
+{'2005 Mitsubishi Lancer Evolution IX GSR', 'Manual', 20000, 50000, 9, 6, 'White Solid', 30, 'Yellow Solid', 4, 'Red Solid', 7, 'Blue Mica', 13, 'Black Mica', 20, 'Cool Silver Metallic', 26},
+{'2005 Mitsubishi Lancer Evolution IX GT', 'Manual', 20000, 50000, 5, 6, 'White Solid', 38, 'Yellow Solid', 6, 'Red Solid', 10, 'Blue Mica', 12, 'Black Mica', 13, 'Cool Silver Metallic', 21},
+{'2006 Mitsubishi Lancer Evolution IX MR GSR', 'Manual', 25000, 55000, 5, 4, 'White Pearl', 35, 'Cool Silver Metallic', 14, 'Medium Purplish Gray Mica', 40, 'Red Solid', 11},
+
+--- NISSAN ---
+
+{'1989 Nissan Skyline GTS-4 (R32)', 'Manual', 15000, 35000, 21, 9, 'Crystal White', 6, 'Black Pearl', 41, 'Red Pearl Metallic', 7, 'Light Blue Metallic', 1, 'Dark Green Metallic', 2, 'Jet Silver Metallic', 15, 'Pearl White', 2, 'Light Grey Metallic', 15, 'Dark Blue Pearl', 10},
+{'1989 Nissan Skyline GTS-t Type M (R32)', 'Manual', 15000, 35000, 42, 12, 'Crystal White', 6, 'Black Pearl', 47, 'Red Pearl Metallic', 8, 'Light Blue Metallic', 1, 'Greyish Blue Pearl', 1, 'Dark Green Metallic', 1, 'Jet Silver Metallic', 16, 'Pearl White', 1, 'Yellowish Silver', 1, 'Spark Silver Metallic', 1, 'Light Grey Metallic', 11, 'Dark Blue Pearl', 10},
+{'1991 Nissan Skyline GTS-4 (R32)', 'Manual', 15000, 35000, 7, 9, 'Crystal White', 10, 'Black Pearl', 23, 'Red Pearl Metallic', 8, 'Greyish Blue Pearl', 2, 'Dark Green Metallic', 2, 'Gun Grey Metallic', 38, 'Yellowish Silver', 1, 'Spark Silver Metallic', 13, 'Dark Blue Pearl', 4},
+{'1991 Nissan Skyline GTS-4 (R32)', 'Automatic', 15000, 35000, 4, 9, 'Crystal White', 10, 'Black Pearl', 23, 'Red Pearl Metallic', 8, 'Greyish Blue Pearl', 2, 'Dark Green Metallic', 2, 'Gun Grey Metallic', 38, 'Yellowish Silver', 1, 'Spark Silver Metallic', 13, 'Dark Blue Pearl', 4},
+{'1991 Nissan Skyline GTS-t Type M (R32)', 'Manual', 15000, 35000, 25, 8, 'Crystal White', 15, 'Black Pearl', 29, 'Red Pearl Metallic', 11, 'Greyish Blue Pearl', 1, 'Dark Green Metallic', 1, 'Gun Grey Metallic', 32, 'Spark Silver Metallic', 9, 'Dark Blue Pearl', 3},
+{'1991 Nissan Skyline GTS-t Type M (R32)', 'Automatic', 15000, 35000, 12, 8, 'Crystal White', 15, 'Black Pearl', 29, 'Red Pearl Metallic', 11, 'Greyish Blue Pearl', 1, 'Dark Green Metallic', 1, 'Gun Grey Metallic', 32, 'Spark Silver Metallic', 9, 'Dark Blue Pearl', 3},
+{'1991 Nissan Skyline GTS25 Type S (R32)', 'Manual', 10000, 30000, 7, 8, 'Crystal White', 6, 'Black Pearl', 23, 'Red Pearl Metallic', 9, 'Greyish Blue Pearl', 1, 'Dark Green Metallic', 2, 'Gun Grey Metallic', 42, 'Spark Silver Metallic', 14, 'Dark Blue Pearl', 3},
+{'1991 Nissan Skyline GTS25 Type S (R32)', 'Automatic', 10000, 30000, 4, 8, 'Crystal White', 6, 'Black Pearl', 23, 'Red Pearl Metallic', 9, 'Greyish Blue Pearl', 1, 'Dark Green Metallic', 2, 'Gun Grey Metallic', 42, 'Spark Silver Metallic', 14, 'Dark Blue Pearl', 3},
+
+{'1989 Nissan Skyline GT-R (R32)', 'Manual', 30000, 80000, 28, 6, 'Crystal White', 1, 'Gun Grey Metallic', 68, 'Black Pearl', 16, 'Red Pearl Metallic', 3, 'Jet Silver Metallic', 9, 'Dark Blue Pearl', 4},
+{'1990 Nissan Skyline GT-R NISMO (R32)', 'Manual', 40000, 120000, 3, 1, 'Gun Grey Metallic', 1},
+{'1991 Nissan Skyline GT-R (R32)', 'Manual', 30000, 80000, 21, 8, 'Crystal White', 17, 'White', 1, 'Spark Silver Metallic', 15, 'Gun Grey Metallic', 43, 'Black Pearl', 14, 'Red Pearl Metallic', 7, 'Greyish Blue Pearl', 1, 'Dark Blue Pearl', 3},
+{'1991 Nissan Skyline GT-R N1 (R32)', 'Manual', 40000, 120000, 2, 1, 'Crystal White', 1},
+{'1993 Nissan Skyline GT-R (R32)', 'Manual', 30000, 120000, 21, 8, 'Crystal White', 42, 'White', 1, 'Spark Silver Metallic', 22, 'Gun Grey Metallic', 19, 'Black Pearl', 9, 'Red Pearl Metallic', 7, 'Greyish Blue Pearl', 1, 'Dark Blue Pearl', 1},
+{'1993 Nissan Skyline GT-R V-Spec (R32)', 'Manual', 30000, 120000, 6, 7, 'Crystal White', 28, 'Spark Silver Metallic', 33, 'Gun Grey Metallic', 22, 'Black Pearl', 9, 'Red Pearl Metallic', 5, 'Greyish Blue Pearl', 1, 'Dark Blue Pearl', 3},
+{'1993 Nissan Skyline GT-R V-Spec N1 (R32)', 'Manual', 40000, 200000, 1, 1, 'Crystal White', 1},
+{'1994 Nissan Skyline GT-R V-Spec II (R32)', 'Manual', 30000, 140000, 6, 5, 'Crystal White', 44, 'Spark Silver Metallic', 31, 'Gun Grey Metallic', 12, 'Black Pearl', 8, 'Red Pearl Metallic', 4},
+{'1994 Nissan Skyline GT-R V-Spec II N1 (R32)', 'Manual', 80000, 280000, 1, 1, 'Crystal White', 1},
+
+{'1995 Nissan Skyline GT-R (R33)', 'Manual', 35000, 90000, 10, 7, 'Super Clear Red', 3, 'Deep Marine Blue', 3, 'Black', 8, 'Spark Silver Metallic', 27, 'Dark Grey Pearl', 5, 'Midnight Purple', 18, 'White', 36},
+{'1995 Nissan Skyline GT-R V-Spec (R33)', 'Manual', 40000, 90000, 9, 7, 'Super Clear Red', 3, 'Deep Marine Blue', 3, 'Black', 7, 'Spark Silver Metallic', 29, 'Dark Grey Pearl', 6, 'Midnight Purple', 20, 'White', 32},
+--{'1995 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 55000, 120000, 1, 1, 'White', 1},
+{'1996 Nissan Skyline GT-R (R33)', 'Manual', 35000, 90000, 7, 7, 'Super Clear Red II', 2, 'Deep Marine Blue', 3, 'Black', 7, 'Dark Grey Pearl', 2, 'Sonic Silver', 24, 'Midnight Purple', 11, 'White', 50},
+--{'1996 Nissan Skyline GT-R LM-Limited (R33)', 'Manual', 70000, 140000, 2, 1, 'Champion Blue', 1},
+{'1996 Nissan Skyline GT-R V-Spec (R33)', 'Manual', 40000, 90000, 5, 7, 'Super Clear Red II', 3, 'Deep Marine Blue', 3, 'Black', 7, 'Dark Grey Pearl', 3, 'Sonic Silver', 25, 'Midnight Purple', 15, 'White', 43},
+--{'1996 Nissan Skyline GT-R V-Spec LM-Limited (R33)', 'Manual', 50000, 110000, 2, 1, 'Champion Blue', 1},
+--{'1996 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 65000, 140000, 1, 1, 'White', 1},
+{'1997 Nissan Skyline GT-R (R33)', 'Manual', 35000, 120000, 6, 9, 'Super Clear Red II', 2, 'Active Red', 1, 'Deep Marine Blue', 3, 'Black Pearl', 1, 'Black', 5, 'Dark Grey Pearl', 2, 'Sonic Silver', 27, 'Midnight Purple', 9, 'White', 50},
+{'1997 Nissan Skyline GT-R V-Spec (R33)', 'Manual', 40000, 120000, 5, 9, 'Super Clear Red II', 3, 'Active Red', 1, 'Deep Marine Blue', 3, 'Black Pearl', 1, 'Black', 8, 'Dark Grey Pearl', 3, 'Sonic Silver', 28, 'Midnight Purple', 9, 'White', 45},
+--{'1997 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 75000, 160000, 1, 1, 'White', 1},
+
+{'1999 Nissan Silvia Spec-R (S15)', 'Manual', 20000, 50000, 17, 7, 'Sparkling Silver', 27, 'Brilliant Blue', 15, 'Pearl White', 44, 'Light Blueish Silver', 1, 'Lightning Yellow', 2, 'Active Red', 4, 'Super Black', 8},
+{'1999 Nissan Silvia Spec-R (S15)', 'Automatic', 17000, 40000, 3, 7, 'Sparkling Silver', 27, 'Brilliant Blue', 15, 'Pearl White', 44, 'Light Blueish Silver', 1, 'Lightning Yellow', 2, 'Active Red', 4, 'Super Black', 8},
+{'1999 Nissan Silvia Spec-R Aero SUPER HICAS (S15)', 'Manual', 25000, 50000, 4, 7, 'Sparkling Silver', 30, 'Brilliant Blue', 13, 'Pearl White', 40, 'Light Blueish Silver', 1, 'Lightning Yellow', 3, 'Active Red', 4, 'Super Black', 10},
+{'1999 Nissan Silvia Spec-R Aero (S15)', 'Manual', 25000, 50000, 7, 7, 'Sparkling Silver', 25, 'Brilliant Blue', 13, 'Pearl White', 44, 'Light Blueish Silver', 1, 'Lightning Yellow', 4, 'Active Red', 4, 'Super Black', 10},
+{'1999 Nissan Silvia Spec-S (S15)', 'Manual', 15000, 35000, 5, 7, 'Sparkling Silver', 41, 'Brilliant Blue', 13, 'Pearl White', 30, 'Light Blueish Silver', 1, 'Lightning Yellow', 2, 'Active Red', 6, 'Super Black', 8},
+{'1999 Nissan Silvia Spec-S (S15)', 'Automatic', 10000, 30000, 2, 7, 'Sparkling Silver', 41, 'Brilliant Blue', 13, 'Pearl White', 30, 'Light Blueish Silver', 1, 'Lightning Yellow', 2, 'Active Red', 6, 'Super Black', 8},
+{'1999 Nissan Silvia Spec-S Aero (S15)', 'Manual', 20000, 35000, 6, 7, 'Sparkling Silver', 28, 'Brilliant Blue', 12, 'Pearl White', 43, 'Light Blueish Silver', 1, 'Lightning Yellow', 2, 'Active Red', 4, 'Super Black', 10},
+{'2002 Nissan Silvia Spec-R Aero (S15)', 'Manual', 25000, 50000, 5, 6, 'Sparkling Silver', 25, 'Brilliant Blue', 13, 'Pearl White', 44, 'Lightning Yellow', 4, 'Active Red', 4, 'Super Black', 10},
+{'2002 Nissan Silvia Spec-R V Package (S15)', 'Manual', 20000, 60000, 7, 6, 'Sparkling Silver', 24, 'Brilliant Blue', 24, 'Pearl White', 51, 'Lightning Yellow', 1, 'Active Red', 1, 'Super Black', 1},
+{'2002 Nissan Silvia Spec-S Aero (S15)', 'Manual', 20000, 35000, 3, 6, 'Sparkling Silver', 28, 'Brilliant Blue', 12, 'Pearl White', 43, 'Lightning Yellow', 2, 'Active Red', 4, 'Super Black', 10},
+{'2002 Nissan Silvia Spec-S V Package (S15)', 'Manual', 15000, 30000, 4, 6, 'Sparkling Silver', 37, 'Brilliant Blue', 22, 'Pearl White', 41, 'Lightning Yellow', 1, 'Active Red', 1, 'Super Black', 1},
+
+{'1999 Nissan Skyline GT-R (R34)', 'Manual', 80000, 180000, 7, 7, 'Active Red', 2, 'Bayside Blue', 22, 'Lightning Yellow', 1, 'Black Pearl', 13, 'Sonic Silver', 15, 'Athlete Silver', 8, 'White', 35},
+{'1999 Nissan Skyline GT-R V-Spec (R34)', 'Manual', 80000, 180000, 9, 7, 'Active Red', 1, 'Bayside Blue', 28, 'Lightning Yellow', 1, 'Black Pearl', 12, 'Sonic Silver', 12, 'Athlete Silver', 5, 'White', 29},
+{'1999 Nissan Skyline GT-R V-Spec N1 (R34)', 'Manual', 150000, 400000, 1, 1, 'White', 1},
+{'1999 Nissan Skyline GT-R Limited Color Midnight Purple II (R34)', 'Manual', 120000, 350000, 1, 1, 'Midnight Purple II', 1},
+{'1999 Nissan Skyline GT-R V-Spec Limited Color Midnight Purple II (R34)', 'Manual', 120000, 350000, 3, 1, 'Midnight Purple II', 1},
+{'2000 Nissan Skyline GT-R Limited Color Midnight Purple III (R34)', 'Manual', 200000, 600000, 1, 1, 'Midnight Purple III', 1},
+{'2000 Nissan Skyline GT-R V-Spec Limited Color Midnight Purple III (R34)', 'Manual', 200000, 600000, 2, 1, 'Midnight Purple III', 1},
+{'2000 Nissan Skyline GT-R (R34)', 'Manual', 100000, 220000, 5, 6, 'Bayside Blue', 25, 'Black Pearl', 13, 'Athlete Silver', 2, 'White', 19, 'Pearl White', 15, 'Sparkling Silver', 25},
+{'2000 Nissan Skyline GT-R V-Spec II (R34)', 'Manual', 100000, 220000, 6, 6, 'Bayside Blue', 33, 'Black Pearl', 11, 'Athlete Silver', 2, 'White', 19, 'Pearl White', 16, 'Sparkling Silver', 19},
+{'2001 Nissan Skyline GT-R V-Spec II N1 (R34)', 'Manual', 200000, 550000, 1, 1, 'White', 1},
+{'2001 Nissan Skyline GT-R M-Spec (R34)', 'Manual', 80000, 220000, 3, 4, 'Silica Brass', 33, 'Black Pearl', 11, 'Pearl White', 25, 'Sparkling Silver', 31},
+{'2002 Nissan Skyline GT-R V-Spec II Nur (R34)', 'Manual', 200000, 500000, 4, 6, 'Millennium Jade', 22, 'Bayside Blue', 17, 'Black Pearl', 9, 'White', 22, 'Pearl White', 20, 'Sparkling Silver', 11},
+{'2002 Nissan Skyline GT-R M-Spec Nur (R34)', 'Manual', 150000, 700000, 3, 5, 'Silica Brass', 3, 'Millennium Jade', 51, 'Black Pearl', 8, 'Pearl White', 26, 'Sparkling Silver', 12},
+
+--- SUBARU ---
+
+{'1997 Subaru Impreza Coupe Type R WRX STi Version IV (GC8)', 'Manual', 15000, 40000, 6, 3, 'Feather White', 75, 'Light Silver Metallic', 15, 'Black Mica', 10},
+{'1997 Subaru Impreza Coupe Type R WRX STi Version IV V-Limited (GC8)', 'Manual', 20000, 50000, 4, 1, 'Sonic Blue Mica', 1},
+{'1997 Subaru Impreza Sedan WRX Pure Sports Sedan (GC8)', 'Manual', 6000, 25000, 7, 5, 'Active Red', 3, 'Feather White', 52, 'Light Silver Metallic', 21, 'Black Mica', 10, 'Dark Blue Mica', 14},
+{'1997 Subaru Impreza Sedan WRX STi Version IV (GC8)', 'Manual', 8000, 30000, 8, 3, 'Feather White', 66, 'Light Silver Metallic', 19, 'Black Mica', 15},
+{'1997 Subaru Impreza Sedan Type RA WRX STi Version IV (GC8)', 'Manual', 20000, 40000, 3, 1, 'Feather White', 1},
+{'1997 Subaru Impreza Sedan Type RA WRX STi Version IV V-Limited (GC8)', 'Manual', 10000, 40000, 4, 1, 'Sonic Blue Mica', 1},
+
+{'1998 Subaru Impreza Coupe Type R WRX STi Version V (GC8)', 'Manual', 20000, 80000, 6, 4, 'Pure White', 50, 'Arctic Silver Metallic', 11, 'Black Mica', 10, 'Cool Grey Metallic', 29},
+{'1998 Subaru Impreza Coupe Type R WRX STi Version V Limited (GC8)', 'Manual', 30000, 90000, 3, 1, 'Sonic Blue Mica', 1},
+{'1998 Subaru Impreza Sedan WRX (GC8)', 'Manual', 8000, 30000, 6, 4, 'Pure White', 43, 'Arctic Silver Metallic', 18, 'Black Mica', 18, 'Cool Grey Metallic', 21},
+{'1998 Subaru Impreza Sedan WRX STi Version V (GC8)', 'Manual', 10000, 40000, 7, 4, 'Pure White', 54, 'Arctic Silver Metallic', 17, 'Black Mica', 8, 'Cool Grey Metallic', 21},
+{'1998 Subaru Impreza Sedan Type RA WRX STi Version V (GC8)', 'Manual', 20000, 40000, 3, 1, 'Pure White', 1},
+{'1998 Subaru Impreza Sedan Type RA WRX STi Version V Limited (GC8)', 'Manual', 15000, 60000, 5, 1, 'Sonic Blue Mica', 1},
+
+{'1999 Subaru Impreza Coupe Type R WRX STi Version VI (GC8)', 'Manual', 20000, 80000, 6, 4, 'Pure White', 50, 'Arctic Silver Metallic', 15, 'Deep Blue', 15, 'Cool Grey Metallic', 20},
+{'1999 Subaru Impreza Coupe Type R WRX STi Version VI Limited (GC8)', 'Manual', 30000, 90000, 5, 1, 'Sonic Blue Mica', 1},
+{'1999 Subaru Impreza Sedan WRX (GC8)', 'Manual', 8000, 30000, 4, 5, 'Pure White', 40, 'Arctic Silver Metallic', 17, 'Black Mica', 12, 'Cool Grey Metallic', 7, 'Blue Ridge Pearl', 24},
+{'1999 Subaru Impreza Sedan WRX STi Version VI (GC8)', 'Manual', 10000, 40000, 6, 4, 'Pure White', 56, 'Arctic Silver Metallic', 15, 'Cool Grey Metallic', 12, 'Cashmere Yellow', 17},
+{'1999 Subaru Impreza Sedan Type RA WRX STi Version VI (GC8)', 'Manual', 20000, 50000, 2, 2, 'Pure White', 79, 'Cashmere Yellow', 21},
+{'1999 Subaru Impreza Sedan Type RA WRX STi Version VI Limited (GC8)', 'Manual', 15000, 60000, 6, 1, 'Sonic Blue Mica', 1},
+
+{'2004 Subaru Impreza Sedan WRX (GDA-E)', 'Manual', 5000, 20000, 11, 6, 'WR Blue Mica', 30, 'Pure White', 17, 'Obsidian Black Pearl', 15, 'Crystal Grey Metallic', 15, 'Premium Silver Metallic', 20, 'Solid Red', 3},
+{'2004 Subaru Impreza Sedan WRX (GDA-E)', 'Automatic', 5000, 20000, 4, 6, 'WR Blue Mica', 30, 'Pure White', 17, 'Obsidian Black Pearl', 15, 'Crystal Grey Metallic', 15, 'Premium Silver Metallic', 20, 'Solid Red', 3},
+{'2004 Subaru Impreza Sedan WRX STi (GDB-E)', 'Manual', 10000, 30000, 1, 5, 'WR Blue Mica', 33, 'Pure White', 17, 'Obsidian Black Pearl', 15, 'Crystal Grey Metallic', 15, 'Premium Silver Metallic', 20},
+{'2004 Subaru Impreza Sedan WRX STi (GDB-E) [DCCD Package]', 'Manual', 10000, 30000, 13, 5, 'WR Blue Mica', 33, 'Pure White', 17, 'Obsidian Black Pearl', 15, 'Crystal Grey Metallic', 15, 'Premium Silver Metallic', 20},
+
+{'2015 Subaru BRZ R', 'Manual', 5000, 15000, 7, 7, 'Crystal White Pearl', 25, 'Ice Silver Metallic', 13, 'Dark Grey Metallic', 9, 'Crystal Black', 11, 'Pure Red', 11, 'World Rally Blue Pearl', 26, 'Lapis Blue Pearl', 18},
+{'2015 Subaru BRZ R', 'Automatic', 5000, 15000, 7, 7, 'Crystal White Pearl', 25, 'Ice Silver Metallic', 13, 'Dark Grey Metallic', 9, 'Crystal Black', 11, 'Pure Red', 11, 'World Rally Blue Pearl', 26, 'Lapis Blue Pearl', 18},
+{'2015 Subaru BRZ S', 'Manual', 10000, 20000, 7, 7, 'Crystal White Pearl', 25, 'Ice Silver Metallic', 13, 'Dark Grey Metallic', 9, 'Crystal Black', 11, 'Pure Red', 11, 'World Rally Blue Pearl', 26, 'Lapis Blue Pearl', 18},
+{'2015 Subaru BRZ S', 'Automatic', 7000, 17000, 7, 7, 'Crystal White Pearl', 25, 'Ice Silver Metallic', 13, 'Dark Grey Metallic', 9, 'Crystal Black', 11, 'Pure Red', 11, 'World Rally Blue Pearl', 26, 'Lapis Blue Pearl', 18},
+
+--- SUZUKI ---
+
+{'1991 Suzuki Cappuccino (EA11R)', 'Manual', 4000, 20000, 23, 2, 'Cordoba Red', 75, 'Satellite Silver Metallic', 25},
+{'1993 Suzuki Cappuccino (EA11R)', 'Manual', 3000, 25000, 17, 3, 'Dark Classic', 30, 'Cordoba Red', 50, 'Mercury Silver Metallic', 20},
+{'1993 Suzuki Cappuccino Limited (EA11R)', 'Manual', 6000, 30000, 2, 1, 'Scuba Blue', 1},
+{'1994 Suzuki Cappuccino Limited (EA11R)', 'Manual', 6000, 30000, 2, 1, 'Scuba Blue', 1},
+{'1995 Suzuki Cappuccino (EA21R)', 'Manual', 5000, 25000, 8, 3, 'Dark Turquoise Green Metallic', 30, 'Antares Red', 50, 'Mercury Silver Metallic', 20},
+{'1995 Suzuki Cappuccino (EA21R)', 'Automatic', 3000, 20000, 8, 3, 'Dark Turquoise Green Metallic', 30, 'Antares Red', 50, 'Mercury Silver Metallic', 20},
+
+--- TOYOTA ---
+
+{'1993 Toyota Supra RZ (JZA80)', 'Manual', 30000, 80000, 13, 6, 'Super White II', 25, 'Anthracite Metallic', 2, 'Silver Metallic Graphite', 33, 'Black', 24, 'Super Red IV', 14, 'Baltic Blue Metallic', 2},
+{'1993 Toyota Supra SZ-R (JZA80)', 'Manual', 30000, 60000, 14, 6, 'Super White II', 25, 'Anthracite Metallic', 2, 'Silver Metallic Graphite', 33, 'Black', 24, 'Super Red IV', 14, 'Baltic Blue Metallic', 2},
+{'1996 Toyota Supra RZ (JZA80)', 'Manual', 50000, 100000, 4, 6, 'Super White II', 25, 'Silver Metallic Graphite', 34, 'Black', 24, 'Super Red IV', 14, 'Deep Jewel Green', 1, 'Blue Mica Metallic', 2},
+{'1996 Toyota Supra SZ-R (JZA80)', 'Manual', 30000, 60000, 5, 6, 'Super White II', 25, 'Silver Metallic Graphite', 34, 'Black', 24, 'Super Red IV', 14, 'Deep Jewel Green', 1, 'Blue Mica Metallic', 2},
+{'1998 Toyota Supra RZ (JZA80)', 'Manual', 50000, 150000, 4, 7, 'Super White II', 24, 'Silver Metallic Graphite', 32, 'Black', 23, 'Super Red IV', 13, 'Super Bright Yellow', 1, 'Grayish Green Mica Metallic', 5, 'Blue Mica Metallic', 2},
+{'1998 Toyota Supra SZ-R (JZA80)', 'Manual', 30000, 60000, 5, 7, 'Super White II', 24, 'Silver Metallic Graphite', 32, 'Black', 23, 'Super Red IV', 13, 'Super Bright Yellow', 1, 'Grayish Green Mica Metallic', 5, 'Blue Mica Metallic', 2},
+
+{'2015 Toyota 86 G', 'Manual', 7000, 15000, 8, 7, 'Crystal White Pearl', 34, 'Ice Silver Metallic', 10, 'Dark Grey Metallic', 25, 'Crystal Black', 42, 'Pure Red', 11, 'Orange Metallic', 8, 'Azurite Blue Pearl', 32},
+{'2015 Toyota 86 G', 'Automatic', 5000, 15000, 8, 7, 'Crystal White Pearl', 34, 'Ice Silver Metallic', 10, 'Dark Grey Metallic', 25, 'Crystal Black', 42, 'Pure Red', 11, 'Orange Metallic', 8, 'Azurite Blue Pearl', 32},
+{'2015 Toyota 86 GT', 'Manual', 8000, 20000, 8, 7, 'Crystal White Pearl', 34, 'Ice Silver Metallic', 10, 'Dark Grey Metallic', 25, 'Crystal Black', 42, 'Pure Red', 11, 'Orange Metallic', 8, 'Azurite Blue Pearl', 32},
+{'2015 Toyota 86 GT', 'Automatic', 7000, 20000, 8, 7, 'Crystal White Pearl', 34, 'Ice Silver Metallic', 10, 'Dark Grey Metallic', 25, 'Crystal Black', 42, 'Pure Red', 11, 'Orange Metallic', 8, 'Azurite Blue Pearl', 32},
+{'2015 Toyota 86 GT \"Limited\"', 'Automatic', 10000, 20000, 8, 7, 'Crystal White Pearl', 34, 'Ice Silver Metallic', 10, 'Dark Grey Metallic', 25, 'Crystal Black', 42, 'Pure Red', 11, 'Orange Metallic', 8, 'Azurite Blue Pearl', 32},
+{'2015 Toyota 86 GT \"Limited\"', 'Manual', 10000, 20000, 8, 7, 'Crystal White Pearl', 34, 'Ice Silver Metallic', 10, 'Dark Grey Metallic', 25, 'Crystal Black', 42, 'Pure Red', 11, 'Orange Metallic', 8, 'Azurite Blue Pearl', 32}
+
+}
+
+local carRarityTempArray = {}
+local carRarityRepeatArray = 0
+local carRarityAddon = 0
+local carRaritySelectorRandom = math.randomseed(sim.timeSeconds)
+local carRaritySelector = 0
+
+local carSkinRarityRepeatArray = 0
+local carSkinRarityTempArray = {}
+local carSkinRarityAddon = 0
+local carSkinAdder = 1
+local carSkinRaritySelectorRandom = math.randomseed(sim.timeSeconds)
+local carTimerSelectorRandom = math.randomseed(sim.timeSeconds)
+local carSkinRaritySelector = 0
+
+local carTimeSelector = 0 --math.randomseed(sim.timeSeconds)
+local carArrayTimer = os.clock()
+local carPriceSelector = math.randomseed(sim.timeSeconds)
+
+local carArrayCalculated = false
+local pressedNext = false
+
+local uiState = ac.getUI()
+
+function DrawTextCentered(text)
+    uiState = ac.getUI()
+    
+    ui.transparentWindow('raceText', vec2(1920 / 2 - 250, 1080 / 2 - 250), vec2(500,100), function ()
+        ui.pushFont(ui.Font.Huge)
+        
+        local size = ui.measureText(text)
+        ui.setCursorX(ui.getCursorX() + ui.availableSpaceX() / 2 - (size.x / 2))
+        ui.text(text)
+
+        ui.text('Select point on a map:')
+    
+        ui.popFont()
+    end)
+end
+
+local showMessageRefuel0 = false
+local showMessageRefuel1 = false
+
+local showMessageERefuel0 = false
+local showMessageERefuel1 = false
+local showMessageERefuel2 = false
+local showMessageERefuel3 = false
+local showMessageERefuelClock = os.clock()
+
+local showMessageRepair0 = false
+local showMessageRepair0S = false
+local showMessageRepair1 = false
+
+local showMessageERepair0 = false
+local showMessageERepair1 = false
+local showMessageERepair2 = false
+local showMessageERepairClock = os.clock()
+
+local showMessageToll0 = false
+local showMessageToll1 = false
+local showMessageToll2 = false
+local showMessageToll3 = false
+local showMessageToll4 = false
+local showMessageToll5 = false
+local showMessageTollClock = os.clock()
+
+local showMessageSecrets0 = false
+local showMessageSecrets1 = false
+local showMessageSecrets2 = false
+local showMessageSecrets = os.clock()
+
+local tableCount = -1
+
+local checkListingsTimer = true
+local checkListingsClock = os.clock()
+
+function Testing()
+    
+
+
+    ac.debug('invamount', carCollectionAmount)
+    ac.debug('inventory', carCollection)
+
+    ac.debug('inv specs', carCollectionState)
+
+
+    if carCollectionAmount > 0 then
+        for i = 0, carCollectionAmount - 1 do
+            --if carCollectionState [i] [0] == 'empty' then
+                --carCollectionState [i] [0] = ac.getCarID(0)
+            --end
+
+        end
+    end
+
+    if pressedNext then
+        carRarityTempArray = {}
+        carSkinRarityTempArray = {}
+
+        for i=1, #carArray do
+            carRarityRepeatArray = carArray[i][5]
+            carRarityAddon = #carRarityTempArray
+            for j=1, carRarityRepeatArray do
+                carRarityTempArray[j + carRarityAddon] = i
+            end
+        end
+
+        carRaritySelectorRandom = math.random(1, #carRarityTempArray)
+        carRaritySelector = carRarityTempArray[carRaritySelectorRandom]
+        carTimeSelector = carRaritySelector
+        carPriceSelector = math.random(carArray[carTimeSelector] [3], carArray[carTimeSelector] [4])
+
+        for l=1, carArray[carTimeSelector] [6] do
+            carSkinRarityAddon = #carSkinRarityTempArray
+            if type(carArray[carTimeSelector] [6 + (l * 2)]) == "number" then
+                for m=1, carArray[carTimeSelector] [6 + (l * 2)] do
+                    if l < carArray[carTimeSelector] [6] + 1 then
+                        carSkinRarityTempArray[m + carSkinRarityAddon] = l
+                    end
+                end
+            end
+        end
+        
+
+        carSkinRaritySelectorRandom = math.random(1, #carSkinRarityTempArray)
+        carSkinRaritySelector = carSkinRarityTempArray[carSkinRaritySelectorRandom]
+
+        pressedNext = false
+        carArrayTimer = os.clock()
+    end
+
+    local carArrayBuilder = {}
+
+    if carTimeSelector ~= nil and carArray[carTimeSelector] ~= nil then
+        ac.debug('CAR NAME', carArray[carTimeSelector] [1])
+        carArrayBuilder[0] = carArray[carTimeSelector] [1]
+        ac.debug('CAR TRANSMISSION', carArray[carTimeSelector] [2])
+        carArrayBuilder[1] = carArray[carTimeSelector] [2]
+        ac.debug('CAR PAINT', carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5])
+        carArrayBuilder[2] = carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5]
+        ac.debug('CAR PRICE', carPriceSelector)
+        carArrayBuilder[3] = tostring(carPriceSelector)
+
+        
+        --usedMarketExpires[table.count(usedMarketExpires)] = carPriceSelector
+        
+        
+        --ac.debug('car array maker', carRarityTempArray)
+        --ac.debug('car skin array maker', carSkinRarityTempArray)
+    end
+
+    if tableCount < 51 and carArrayTimer + 0.1 < os.clock() and pressedNext == false then
+        pressedNext = true
+        carTimerSelectorRandom = math.random(30,604800)
+        usedMarket[tableCount] = carArrayBuilder
+        usedMarketExpires[tableCount] = carTimerSelectorRandom + tonumber(sim.systemTime)
+        tableCount = tableCount + 1
+    end
+
+    for i, pos in ipairs(usedMarketExpires) do
+        if tonumber(usedMarketExpires[i]) < tonumber(sim.systemTime) and pressedNext == false and confirmCarPurchase == false and checkListingsTimer then
+            local carArrayBuildertemp = {}
+            
+            
+
+            carRarityTempArray = {}
+            carSkinRarityTempArray = {}
+
+            for i=1, #carArray do
+                carRarityRepeatArray = carArray[i][5]
+                carRarityAddon = #carRarityTempArray
+                for j=1, carRarityRepeatArray do
+                    carRarityTempArray[j + carRarityAddon] = i
+                end
+            end
+
+            carRaritySelectorRandom = math.random(1, #carRarityTempArray)
+            carRaritySelector = carRarityTempArray[carRaritySelectorRandom]
+            carTimeSelector = carRaritySelector
+            carPriceSelector = math.random(carArray[carTimeSelector] [3], carArray[carTimeSelector] [4])
+
+            for l=1, carArray[carTimeSelector] [6] do
+                carSkinRarityAddon = #carSkinRarityTempArray
+                if type(carArray[carTimeSelector] [6 + (l * 2)]) == "number" then
+                    for m=1, carArray[carTimeSelector] [6 + (l * 2)] do
+                        if l < carArray[carTimeSelector] [6] + 1 then
+                            carSkinRarityTempArray[m + carSkinRarityAddon] = l
+                        end
+                    end
+                end
+            end
+            
+
+            carSkinRaritySelectorRandom = math.random(1, #carSkinRarityTempArray)
+            carSkinRaritySelector = carSkinRarityTempArray[carSkinRaritySelectorRandom]
+
+            pressedNext = false
+            carArrayTimer = os.clock()
+
+            if carTimeSelector ~= nil and carArray[carTimeSelector] ~= nil then
+                ac.debug('CAR NAME', carArray[carTimeSelector] [1])
+                carArrayBuilder[0] = carArray[carTimeSelector] [1]
+                ac.debug('CAR TRANSMISSION', carArray[carTimeSelector] [2])
+                carArrayBuilder[1] = carArray[carTimeSelector] [2]
+                ac.debug('CAR PAINT', carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5])
+                carArrayBuilder[2] = carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5]
+                ac.debug('CAR PRICE', carPriceSelector)
+                carArrayBuilder[3] = tostring(carPriceSelector)
+        
+                
+                --usedMarketExpires[table.count(usedMarketExpires)] = carPriceSelector
+                
+                
+                --ac.debug('car array maker', carRarityTempArray)
+                --ac.debug('car skin array maker', carSkinRarityTempArray)
+            end
+
+            
+            carTimerSelectorRandom = math.random(30,604800)
+            usedMarket[i] = carArrayBuilder
+            usedMarketExpires[i] = tostring(carTimerSelectorRandom + tonumber(sim.systemTime))
+        end
+
+    end
+
+    if not checkListingsTimer and checkListingsClock + 0.01 < os.clock() then
+        checkListingsTimer = true
+    end
+
+    ac.debug('tablecount', tableCount)
+    ac.debug('car time selector', carTimeSelector)
+
+end
+
+function LoadCarMarket()
+
+
+end
 
 local engineIsOn = true
 local oilOnFire = 0
@@ -97,6 +642,7 @@ local isOnFire = false
 local isOnFireClock = os.clock()
 local isOnFireChance = math.randomseed(sim.timeSeconds)
 
+
 function LoadChecking()
 
     if loadCheckTimer + 1 > os.clock() then
@@ -105,6 +651,15 @@ function LoadChecking()
         oilAmount = storedValues.oilAmount
         oilQuality = storedValues.oilQuality
         tempEnabled = storedValues.tempEnabled
+        tableCount = storedValues.tableCount
+        carCollectionAmount = storedValues.carCollectionAmount
+        if storedValues.usedMarket ~= nil then
+            usedMarket = StorageUnpackUsedMarketNested(storedValues.usedMarket, 50)
+        end
+        if storedValues.usedMarketExpires ~= nil then
+            usedMarketExpires = StorageUnpack(storedValues.usedMarketExpires, 50, false)
+        end
+        carCollection = StorageUnpackCarCollectionNested(storedValues.carCollection, storedValues.carCollectionAmount)
     end
 
     if loadCheckTimer + 3 < os.clock() then
@@ -139,6 +694,8 @@ end
 
 local saveTimer = os.clock()
 
+local justwon = false
+
 function script.update(dt)
 
     ac.storageSetPath('acs_x86', nil)
@@ -157,6 +714,17 @@ function script.update(dt)
             storedValues.carDamage2 = car.damage[2]
             storedValues.carDamage3 = car.damage[3]
             storedValues.tempEnabled = tempEnabled
+            if tableCount > 49 then
+                storedValues.usedMarket = StoragePackUsedMarketNested(usedMarket)
+                storedValues.usedMarketExpires = StoragePack(usedMarketExpires)
+            end
+            storedValues.carCollectionAmount = carCollectionAmount
+            if carCollectionAmount > 0 then
+                storedValues.carCollection = StoragePackCarCollectionNested(carCollection, carCollectionAmount)
+            else
+                storedValues.carCollection = ""
+            end
+            storedValues.tableCount = tableCount
             if enginedamageFirstLoad + 10 > os.clock() then
                 storedValues.engineDamage = engineDamage
                 physics.setCarEngineLife(0, engineDamage)
@@ -169,6 +737,9 @@ function script.update(dt)
         TollManagement()
         SaveCarPosition()
 
+        Testing()
+        ac.debug('Car Market', usedMarket)
+        ac.debug('Car Market Expiration', usedMarketExpires)
         if ac.getUserSteamID() == '76561198353513861' then
             ----
         end
@@ -221,8 +792,8 @@ function script.update(dt)
     end
 
     if carFile:get("SAFETY","SAFETY_RATING",0) == 0 then
-        hasRollcage = 0
-        safetyRating = 4
+        os.showMessage("MISSING SAFETY DATA IN \"car.ini\"")
+        ac.reconnectTo()
     else
         hasRollcage = carFile:get("SAFETY","HAS_ROLLCAGE",0)
         safetyRating = carFile:get("SAFETY","SAFETY_RATING",0)
@@ -388,6 +959,14 @@ function script.update(dt)
     else
         ac.debug('not working', 'nil')
         
+    end
+
+
+    if ac.load('win') == 1 and justwon == false then
+        money = money + 100
+        justwon = true
+    elseif ac.load('win') == 0 then
+        justwon = false
     end
 
 end
@@ -1074,8 +1653,15 @@ local oilSnapped = false
 local oilPouring = false
 local oilDraining = false
 
-local menuState = 11
+local menuState = 15
 local transferPersonType = 0
+local justtransfered = false
+local usedMarketScroll = 0
+local confirmCarPurchaseIndex = 1
+local garageCarCycle = 0
+local displayGarageCars = true
+local displayGarageCarsTimer = os.clock()
+local sellCarCheck = false
 
 local carArrayX = {}
 local carArrayZ = {}
@@ -1109,10 +1695,10 @@ function script.drawUI()
 
         if  menuState == 0 then
         
-            ui.toolWindow('Main Menu', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
+            ui.toolWindow('Main Menu', vec2(0, 0), vec2(1920,1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
-                ui.childWindow('mainmenu', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
+                ui.childWindow('mainmenu', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
 
 
                     ui.setCursorX(100)
@@ -1123,60 +1709,60 @@ function script.drawUI()
 
                     --- MAIN MENU ---
 
-                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
+                    ui.setCursorX(1080 / 2 + 150)
                     ui.setCursorY(-190)
 
                     ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 270 + 2)
+                    ui.setCursorX(1080 / 2 + 270 + 2)
                     ui.setCursorY(29 + 2)
                     ui.textColored('MAIN MENU', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 270 + 1)
+                    ui.setCursorX(1080 / 2 + 270 + 1)
                     ui.setCursorY(29 + 1)
                     ui.textColored('MAIN MENU', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 270)
+                    ui.setCursorX(1080 / 2 + 270)
                     ui.setCursorY(29)
                     ui.textColored('MAIN MENU', rgbm(0.8,0,1,1))
 
                     --- MONEY ---
 
-                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorX(1080 + 300)
                     ui.setCursorY(-186)
 
                     ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorX(1080 + 330 + 2)
                     ui.setCursorY(-101 + 2)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorX(1080 + 330 + 1)
                     ui.setCursorY(-101 + 1)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorX(1080 + 330)
                     ui.setCursorY(-101)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorX(1080 + 370 + 2)
                     ui.setCursorY(-95 + 2)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorX(1080 + 370 + 1)
                     ui.setCursorY(-95 + 1)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorX(1080 + 370)
                     ui.setCursorY(-95)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
@@ -1205,7 +1791,7 @@ function script.drawUI()
 
                     --- SRP MAP ---
 
-                    ui.setCursorX(uiState.windowSize.y / 2 + 100)
+                    ui.setCursorX(1080 / 2 + 100)
                     ui.setCursorY(180)
 
                     ui.image('https://i.postimg.cc/KYjNJhzp/map-mini.png',vec2(554,819))
@@ -1227,7 +1813,7 @@ function script.drawUI()
                             carArrayX[i] = playerCarStates.position.x
                             carArrayZ[i] = playerCarStates.position.z
                             if carArrayX[i] ~= 0 then
-                                ui.drawCircle(vec2((uiState.windowSize.x / 2) +  carArrayX[i] / 33 + 22, (uiState.windowSize.y / 2) +  carArrayZ[i] / 33 -50), 5, rgbm(0.6,0,1,1), 30, 15)
+                                ui.drawCircle(vec2((1920 / 2) +  carArrayX[i] / 33 + 22, (1080 / 2) +  carArrayZ[i] / 33 -50), 5, rgbm(0.6,0,1,1), 30, 15)
                             end
                         end
                 
@@ -1235,10 +1821,10 @@ function script.drawUI()
 
                     --- YOU ARE HERE ---
 
-                    ui.drawCircle(vec2((uiState.windowSize.x / 2) + car.position.x / 33 + 22, (uiState.windowSize.y / 2) + car.position.z / 33 -50), 5, rgbm(1,0,0,1), 30, 15)
+                    ui.drawCircle(vec2((1920 / 2) + car.position.x / 33 + 22, (1080 / 2) + car.position.z / 33 -50), 5, rgbm(1,0,0,1), 30, 15)
                     
-                    ui.setCursorX((uiState.windowSize.x / 2) + car.position.x / 33 + 22 + 20)
-                    ui.setCursorY((uiState.windowSize.y / 2) + car.position.z / 33 -50 - 35)
+                    ui.setCursorX((1920 / 2) + car.position.x / 33 + 22 + 20)
+                    ui.setCursorY((1080 / 2) + car.position.z / 33 -50 - 35)
                     ui.pushFont(ui.Font.Title)
 
                     ui.textColored('YOU ARE HERE', rgbm(1,0,0,1))
@@ -1284,24 +1870,24 @@ function script.drawUI()
 
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(115 + 2)
+                    ui.setCursorX(106 + 2)
                     ui.setCursorY(415 + 2)
-                    ui.textColored('ENGINE', rgbm(0.1,0.8,1,0.7))
+                    ui.textColored('GARAGE', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(115 + 1)
+                    ui.setCursorX(106 + 1)
                     ui.setCursorY(415 + 1)
-                    ui.textColored('ENGINE', rgbm(0.8,0,1,1))
+                    ui.textColored('GARAGE', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(115)
+                    ui.setCursorX(106)
                     ui.setCursorY(415)
-                    ui.textColored('ENGINE', rgbm(0.8,0,1,1))
+                    ui.textColored('GARAGE', rgbm(0.8,0,1,1))
 
                     ui.setCursorX(30)
                     ui.setCursorY(385)
 
-                    if ui.invisibleButton('engine', vec2(340,130)) then
+                    if ui.invisibleButton('garage', vec2(340,130)) then
                         menuState = 3
                     end
 
@@ -1362,28 +1948,28 @@ function script.drawUI()
                         menuState = 1
                     end
 
-                    ui.setCursorX(uiState.windowSize.x - 450)
+                    ui.setCursorX(1920 - 450)
                     ui.setCursorY(700)
 
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
+                    ui.setCursorX(1920 - 300 + 2)
                     ui.setCursorY(815 + 2)
                     ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
+                    ui.setCursorX(1920 - 300 + 1)
                     ui.setCursorY(815 + 1)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300)
+                    ui.setCursorX(1920 - 300)
                     ui.setCursorY(815)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
-                    ui.setCursorX(uiState.windowSize.x - 420)
+                    ui.setCursorX(1920 - 420)
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('menuquit', vec2(340,130)) then
@@ -1398,10 +1984,10 @@ function script.drawUI()
         
         elseif menuState == 1 then
 
-            ui.toolWindow('Settings', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
+            ui.toolWindow('Settings', vec2(0, 0), vec2(1920,1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
-                ui.childWindow('setting', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
+                ui.childWindow('setting', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -1431,60 +2017,60 @@ function script.drawUI()
 
                     --- SETTINGS ---
 
-                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
+                    ui.setCursorX(1080 / 2 + 150)
                     ui.setCursorY(-190)
 
                     ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 300 + 2)
+                    ui.setCursorX(1080 / 2 + 300 + 2)
                     ui.setCursorY(29 + 2)
                     ui.textColored('SETTINGS', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 300 + 1)
+                    ui.setCursorX(1080 / 2 + 300 + 1)
                     ui.setCursorY(29 + 1)
                     ui.textColored('SETTINGS', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 300)
+                    ui.setCursorX(1080 / 2 + 300)
                     ui.setCursorY(29)
                     ui.textColored('SETTINGS', rgbm(0.8,0,1,1))
 
                     --- MONEY ---
 
-                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorX(1080 + 300)
                     ui.setCursorY(-186)
 
                     ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorX(1080 + 330 + 2)
                     ui.setCursorY(-101 + 2)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorX(1080 + 330 + 1)
                     ui.setCursorY(-101 + 1)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorX(1080 + 330)
                     ui.setCursorY(-101)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorX(1080 + 370 + 2)
                     ui.setCursorY(-95 + 2)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorX(1080 + 370 + 1)
                     ui.setCursorY(-95 + 1)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorX(1080 + 370)
                     ui.setCursorY(-95)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
@@ -1575,28 +2161,28 @@ function script.drawUI()
 
                     --- BACK ---
 
-                    ui.setCursorX(uiState.windowSize.x - 450)
+                    ui.setCursorX(1920 - 450)
                     ui.setCursorY(700)
 
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
+                    ui.setCursorX(1920 - 300 + 2)
                     ui.setCursorY(815 + 2)
                     ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
+                    ui.setCursorX(1920 - 300 + 1)
                     ui.setCursorY(815 + 1)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300)
+                    ui.setCursorX(1920 - 300)
                     ui.setCursorY(815)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
-                    ui.setCursorX(uiState.windowSize.x - 420)
+                    ui.setCursorX(1920 - 420)
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
@@ -1611,10 +2197,10 @@ function script.drawUI()
 
         elseif menuState == 2 then
 
-            ui.toolWindow('Services', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
+            ui.toolWindow('Services', vec2(0, 0), vec2(1920,1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
-                ui.childWindow('service', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
+                ui.childWindow('service', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -1644,60 +2230,60 @@ function script.drawUI()
 
                     --- SERVICES ---
 
-                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
+                    ui.setCursorX(1080 / 2 + 150)
                     ui.setCursorY(-190)
 
                     ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 302 + 2)
+                    ui.setCursorX(1080 / 2 + 302 + 2)
                     ui.setCursorY(29 + 2)
                     ui.textColored('SERVICES', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 302 + 1)
+                    ui.setCursorX(1080 / 2 + 302 + 1)
                     ui.setCursorY(29 + 1)
                     ui.textColored('SERVICES', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 302)
+                    ui.setCursorX(1080 / 2 + 302)
                     ui.setCursorY(29)
                     ui.textColored('SERVICES', rgbm(0.8,0,1,1))
 
                     --- MONEY ---
 
-                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorX(1080 + 300)
                     ui.setCursorY(-186)
 
                     ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorX(1080 + 330 + 2)
                     ui.setCursorY(-101 + 2)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorX(1080 + 330 + 1)
                     ui.setCursorY(-101 + 1)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorX(1080 + 330)
                     ui.setCursorY(-101)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorX(1080 + 370 + 2)
                     ui.setCursorY(-95 + 2)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorX(1080 + 370 + 1)
                     ui.setCursorY(-95 + 1)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorX(1080 + 370)
                     ui.setCursorY(-95)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
@@ -1745,73 +2331,115 @@ function script.drawUI()
 
 
                     ui.setCursorX(0)
-                    ui.setCursorY(400)
+                    ui.setCursorY(350)
 
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(145 + 2)
-                    ui.setCursorY(515 + 2)
+                    ui.setCursorY(465 + 2)
                     ui.textColored('FUEL', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(145 + 1)
-                    ui.setCursorY(515 + 1)
+                    ui.setCursorY(465 + 1)
                     ui.textColored('FUEL', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(145)
-                    ui.setCursorY(515)
+                    ui.setCursorY(465)
                     ui.textColored('FUEL', rgbm(0.8,0,1,1))
 
                     ui.setCursorX(30)
-                    ui.setCursorY(485)
+                    ui.setCursorY(435)
 
                     if ui.invisibleButton('fuelservice', vec2(340,210)) then
                         physics.setCarPosition(0, vec3(-4515.52, 34.75, -6014.95), ac.getCameraDirection())
                     end
 
                     ui.setCursorX(400)
-                    ui.setCursorY(440)
+                    ui.setCursorY(390)
 
                     ui.image('https://i.postimg.cc/T2LsTgTN/UI-PANELS-PURPLE.png',vec2(500,300))
 
                     ui.pushFont(ui.Font.Title)
                     ui.setCursorX(465)
-                    ui.setCursorY(515)
+                    ui.setCursorY(465)
                     ui.textColored('Teleports you to the fuel station in case car is', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Title)
                     ui.setCursorX(465)
-                    ui.setCursorY(540)
+                    ui.setCursorY(490)
                     ui.textColored('out of fuel.', rgbm(0.8,0,1,1))
 
+                    -- DEALERSHIP --
 
+                    ui.setCursorX(0)
+                    ui.setCursorY(600)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(75 + 2)
+                    ui.setCursorY(715 + 2)
+                    ui.textColored('DEALERSHIP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(75 + 1)
+                    ui.setCursorY(715 + 1)
+                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(75)
+                    ui.setCursorY(715)
+                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(30)
+                    ui.setCursorY(685)
+
+                    if ui.invisibleButton('dealershipservice', vec2(340,210)) then
+                        menuState = 12
+                    end
+
+                    ui.setCursorX(400)
+                    ui.setCursorY(640)
+
+                    ui.image('https://i.postimg.cc/T2LsTgTN/UI-PANELS-PURPLE.png',vec2(500,300))
+
+                    ui.pushFont(ui.Font.Title)
+                    ui.setCursorX(465)
+                    ui.setCursorY(715)
+                    ui.textColored('Brings you to the car dealership menu where', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Title)
+                    ui.setCursorX(465)
+                    ui.setCursorY(740)
+                    ui.textColored('you can buy cars.', rgbm(0.8,0,1,1))
 
                     --- BACK ---
 
-                    ui.setCursorX(uiState.windowSize.x - 450)
+                    ui.setCursorX(1920 - 450)
                     ui.setCursorY(700)
 
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
+                    ui.setCursorX(1920 - 300 + 2)
                     ui.setCursorY(815 + 2)
                     ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
+                    ui.setCursorX(1920 - 300 + 1)
                     ui.setCursorY(815 + 1)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300)
+                    ui.setCursorX(1920 - 300)
                     ui.setCursorY(815)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
-                    ui.setCursorX(uiState.windowSize.x - 420)
+                    ui.setCursorX(1920 - 420)
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
@@ -1826,10 +2454,1080 @@ function script.drawUI()
 
         elseif menuState == 3 then
 
-            ui.toolWindow('ENGINES', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
+            ui.toolWindow('ENGINES', vec2(0, 0), vec2(1920,1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
-                ui.childWindow('Engine', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
+                ui.childWindow('Engine', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- GARAGE ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 312 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('GARAGE', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 312 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('GARAGE', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 312)
+                    ui.setCursorY(29)
+                    ui.textColored('GARAGE', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+                    --- CARS ---
+
+                    ui.setCursorX(0)
+                    ui.setCursorY(100)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(135 + 2)
+                    ui.setCursorY(215 + 2)
+                    ui.textColored('CARS', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(135 + 1)
+                    ui.setCursorY(215 + 1)
+                    ui.textColored('CARS', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(135)
+                    ui.setCursorY(215)
+                    ui.textColored('CARS', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(30)
+                    ui.setCursorY(185)
+
+                    if ui.invisibleButton('cars', vec2(340,130)) then
+                        menuState = 15
+                    end
+
+                    --- ENGINE ---
+
+                    ui.setCursorX(0)
+                    ui.setCursorY(300)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(115 + 2)
+                    ui.setCursorY(415 + 2)
+                    ui.textColored('ENGINE', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(115 + 1)
+                    ui.setCursorY(415 + 1)
+                    ui.textColored('ENGINE', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(115)
+                    ui.setCursorY(415)
+                    ui.textColored('ENGINE', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(30)
+                    ui.setCursorY(385)
+
+                    if ui.invisibleButton('engine', vec2(340,130)) then
+                        menuState = 13
+                    end
+
+
+
+
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 0
+                    end
+
+
+                end)
+
+
+            end)
+
+
+        elseif menuState == 4 then
+
+            ui.toolWindow('MONEYS', vec2(0, 0), vec2(1920,1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('Money', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- SERVICES ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 292 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('FINANCES', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 292 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 292)
+                    ui.setCursorY(29)
+                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+
+                    ui.setCursorX(0)
+                    ui.setCursorY(100)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(59 + 2)
+                    ui.setCursorY(215 + 2)
+                    ui.textColored('TRANSFER cr.', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(59 + 1)
+                    ui.setCursorY(215 + 1)
+                    ui.textColored('TRANSFER cr.', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(59)
+                    ui.setCursorY(215)
+                    ui.textColored('TRANSFER cr.', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(30)
+                    ui.setCursorY(185)
+
+                    if ui.invisibleButton('transfer', vec2(340,130)) then
+                        menuState = 11
+                    end
+
+
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 0
+                    end
+
+
+                end)
+
+
+            end)
+
+        elseif menuState == 11 then
+
+            ui.toolWindow('TRANSFER', vec2(0, 0), vec2(1920,1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('Transfers', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- SERVICES ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 292 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TRANSFER', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 292 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TRANSFER', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 292)
+                    ui.setCursorY(29)
+                    ui.textColored('TRANSFER', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+                    --- MONEY AMOUNT TRANSFER ---
+
+                    ui.setCursorX(1080/2 + 175)
+                    ui.setCursorY(-25)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 152 + 2)
+                    ui.setCursorY(58 + 2)
+                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 152 + 1)
+                    ui.setCursorY(58 + 1)
+                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 152)
+                    ui.setCursorY(58)
+                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 195 + 2)
+                    ui.setCursorY(65 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 195 + 1)
+                    ui.setCursorY(65 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 195)
+                    ui.setCursorY(65)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    --- +1 ---
+
+                    ui.setCursorX(1080/2 + 450)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 235 + 2)
+                    ui.setCursorY(155 + 2)
+                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 235 + 1)
+                    ui.setCursorY(155 + 1)
+                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 235)
+                    ui.setCursorY(155)
+                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 220 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+
+                    ui.setCursorX(1080/2 + 507 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+1', vec2(40,40)) and moneyTransfer < money then
+                        moneyTransfer = moneyTransfer + 1
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 260 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(1080/2 + 553 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-1', vec2(40,40)) and moneyTransfer > 0 then
+                        moneyTransfer = moneyTransfer - 1
+                    end
+
+
+                    --- +10 ---
+
+                    ui.setCursorX(1080/2 + 350)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 140 + 2)
+                    ui.setCursorY(155 + 2)
+                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 140 + 1)
+                    ui.setCursorY(155 + 1)
+                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 140)
+                    ui.setCursorY(155)
+                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 120 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+
+                    ui.setCursorX(1080/2 + 407 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+10', vec2(40,40)) and moneyTransfer < money - 9 then
+                        moneyTransfer = moneyTransfer + 10
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 160 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(1080/2 + 453 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-10', vec2(40,40)) and moneyTransfer > 9 then
+                        moneyTransfer = moneyTransfer - 10
+                    end
+
+                    --- +100 ---
+
+                    ui.setCursorX(1080/2 + 250)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 50 + 2)
+                    ui.setCursorY(155 + 2)
+                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 50 + 1)
+                    ui.setCursorY(155 + 1)
+                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 50)
+                    ui.setCursorY(155)
+                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 20 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+                    
+                    ui.setCursorX(1080/2 + 307 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+100', vec2(40,40)) and moneyTransfer < money - 99 then
+                        moneyTransfer = moneyTransfer + 100
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 60 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(1080/2 + 353 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-100', vec2(40,40)) and moneyTransfer > 99 then
+                        moneyTransfer = moneyTransfer - 100
+                    end
+
+
+                    --- +1000 ---
+
+                    ui.setCursorX(1080/2 + 150)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 - 48 + 2)
+                    ui.setCursorY(157 + 2)
+                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 - 48 + 1)
+                    ui.setCursorY(157 + 1)
+                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 - 48)
+                    ui.setCursorY(157)
+                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 - 80 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+
+                    ui.setCursorX(1080/2 + 207 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('+1000', vec2(40,40)) and moneyTransfer < money - 999 then
+                        moneyTransfer = moneyTransfer + 1000
+                    end
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 - 42 + 2)
+                    ui.setCursorY(205 + 2)
+                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+
+                    ui.setCursorX(1080/2 + 253 + 2)
+                    ui.setCursorY(355 + 2)
+
+                    if ui.invisibleButton('-1000', vec2(40,40)) and moneyTransfer > 999 then
+                        moneyTransfer = moneyTransfer - 1000
+                    end
+
+
+                    --- MONEY TRANSFER PERSON ---
+
+                    ui.setCursorX(1080/2 + 80)
+                    ui.setCursorY(225)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(650,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 175)
+                    ui.setCursorY(437 + 2)
+                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 175)
+                    ui.setCursorY(437 + 1)
+                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 175)
+                    ui.setCursorY(437)
+                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 300 + 2)
+                    ui.setCursorY(405 + 2)
+                    ui.dwriteTextAligned('NEXT', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.5,0.5,0.5,1))
+
+                    ui.setCursorX(1080/2 + 460)
+                    ui.setCursorY(525 + 2)
+
+                    --22
+
+                    if transferPersonType < simstate.connectedCars - 1 then
+                        if ui.invisibleButton('next', vec2(200,100)) then
+                            transferPersonType = transferPersonType + 1
+                        end
+                    end
+
+                    ui.setCursorX(1080/2 + 150)
+                    ui.setCursorY(525 + 2)
+
+                    if transferPersonType > 0 then
+                        if ui.invisibleButton('previous', vec2(250,100)) then
+                            transferPersonType = transferPersonType - 1
+                        end
+                    end
+
+                    ui.setCursorX(1080/2 + 300)
+                    ui.setCursorY(655 + 2)
+
+
+                    if ui.button('TRANSFER', vec2(250,100)) then
+                        money = money - moneyTransfer
+                        TransferMoney()
+                    end
+
+        
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080/2 + 60 + 2)
+                    ui.setCursorY(405 + 2)
+                    ui.dwriteTextAligned('PREVIOUS', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.5,0.5,0.5,1))
+
+
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 4
+                    end
+
+
+                end)
+
+
+            end)
+
+
+        elseif menuState == 12 then
+
+            ui.toolWindow('DEALERSHIP', vec2(0, 0), vec2(1920,1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('Dealership', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 278 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('DEALERSHIP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 278 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 278)
+                    ui.setCursorY(29)
+                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+
+                    ui.drawRectFilled(vec2(50,200), vec2(1400,1000), rgbm(0.8,0.8,0.8,0.9))
+                    
+                    ui.drawLine(vec2(1540,250), vec2(1760,250), rgbm(0.3,0.3,0.3,1), 75)
+                    ui.drawLine(vec2(1540,350), vec2(1760,350), rgbm(0.3,0.3,0.3,1), 75)
+
+                    ui.setCursorX(1576)
+                    ui.setCursorY(230)
+                    ui.dwriteTextAligned('SCROLL UP', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.setCursorX(1548)
+                    ui.setCursorY(330)
+                    ui.dwriteTextAligned('SCROLL DOWN', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.setCursorX(1539)
+                    ui.setCursorY(313)
+
+                    if ui.button('     ', vec2(221,75), ui.ButtonFlags.Repeat) and usedMarketScroll > -6700 then
+                        usedMarketScroll = usedMarketScroll - 10
+                    end
+
+                    ui.setCursorX(1539)
+                    ui.setCursorY(213)
+
+                    if ui.button('    ', vec2(221,75), ui.ButtonFlags.Repeat) and usedMarketScroll < 0 then
+                        usedMarketScroll = usedMarketScroll + 10
+                    end
+                    
+                    if loadCheckTimer + 3 < os.clock() then
+                        
+                        for i = 1, 50 do
+
+                        
+                            if 80 + (i * 150) + usedMarketScroll > 180 and 80 + (i * 150) + usedMarketScroll < 1000 then
+
+                                
+                                ui.setCursorX(60)
+                                ui.setCursorY(-515 + (i * 150) + usedMarketScroll)
+                                ui.dwriteTextAligned(usedMarket[i] [0], 30, ui.Alignment.Start, ui.Alignment.Center, 1200, false, rgbm(0.5,0.2,0.2,1))
+                            end
+
+                            if 200 + (i * 150) + usedMarketScroll > 180 and 200 + (i * 150) + usedMarketScroll < 1000 then
+
+                                ui.drawLine(vec2(50,200 + (i * 150) + usedMarketScroll), vec2(1400,200 + (i * 150) + usedMarketScroll), rgbm(0.2,0.2,0.2,0.6), 5)
+                            
+                            end
+
+                            if 115 + (i * 150) + usedMarketScroll > 180 and 115 + (i * 150) + usedMarketScroll < 1000 then
+                                ui.pushFont(ui.Font.Title)
+                                ui.setCursorX(100)
+                                ui.setCursorY(115 + (i * 150) + usedMarketScroll)
+                                ui.textColored('Color: ' .. usedMarket[i] [2], rgbm(0.2,0.2,0.2,0.85))
+                            end
+
+                            if 150 + (i * 150) + usedMarketScroll > 180 and 150 + (i * 150) + usedMarketScroll < 1000 then
+                                ui.pushFont(ui.Font.Title)
+                                ui.setCursorX(100)
+                                ui.setCursorY(150 + (i * 150) + usedMarketScroll)
+                                ui.textColored('Transmission: ' .. usedMarket[i] [1], rgbm(0.2,0.2,0.2,0.85))
+                            end
+
+                            if 139 + (i * 150) + usedMarketScroll > 180 and 139 + (i * 150) + usedMarketScroll < 1000 then
+                                ui.pushFont(ui.Font.Huge)
+                                ui.setCursorX(800)
+                                ui.setCursorY(-11 + (i * 150) + usedMarketScroll)
+                                ui.dwriteTextAligned(usedMarket[i] [3] .. ' cr', 55, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.1,0.1,1))
+                                ui.setCursorX(801)
+                                ui.setCursorY(-10 + (i * 150) + usedMarketScroll)
+                                ui.dwriteTextAligned(usedMarket[i] [3] .. ' cr', 55, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.1,0.1,1))
+                            end
+
+                            if 130 + (i * 150) + usedMarketScroll > 180 and 130 + (i * 150) + usedMarketScroll < 1000  then
+                                ui.drawLine(vec2(1153,153 + (i * 150) + usedMarketScroll), vec2(1383,153 + (i * 150) + usedMarketScroll), rgbm(0.1,0,0.2,0.2), 65)
+
+                            end
+
+                            if 130 + (i * 150) + usedMarketScroll > 180 and 130 + (i * 150) + usedMarketScroll < 1000 then
+                                ui.setCursorX(1170)
+                                ui.setCursorY(-450 + (i * 150) + usedMarketScroll)
+                                ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.Start, ui.Alignment.Center, 1200, false, rgbm(0.4,0.1,0.8,1))
+
+                            end
+
+                            if 120 + (i * 150) + usedMarketScroll > 180 and 120 + (i * 150) + usedMarketScroll < 1000 then
+                                ui.setCursorX(1150)
+                                ui.setCursorY(120 + (i * 150) + usedMarketScroll)
+
+                                if ui.invisibleButton('purchasecar' .. tostring(i), vec2(230,65)) then
+                                    confirmCarPurchase = true
+                                    confirmCarPurchaseIndex = i
+                                end
+                            
+                            end
+                                
+                        end
+
+                    end
+
+                    ui.drawLine(vec2(1420,150), vec2(1420,1050), rgbm(0.3,0.3,0.3,1), 55)
+                    ui.drawLine(vec2(25,150), vec2(25,1050), rgbm(0.3,0.3,0.3,1), 55)
+                    ui.drawLine(vec2(25,177), vec2(1420,177), rgbm(0.3,0.3,0.3,1), 55)
+                    ui.drawLine(vec2(25,1022), vec2(1420,1022), rgbm(0.3,0.3,0.3,1), 55)
+
+                    if confirmCarPurchase then
+                        ui.setCursorX(1460)
+                        ui.setCursorY(420)
+
+                        ui.image('https://i.postimg.cc/QtPnpxJq/UI-PANELS-BLUE.png',vec2(400,300))
+                        
+                        ui.drawLine(vec2(1520,628), vec2(1640,628), rgbm(0.1,0,0.2,0.3), 65)
+                        ui.drawLine(vec2(1685,628), vec2(1805,628), rgbm(0.1,0,0.2,0.3), 65)
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(1295)
+                        ui.setCursorY(465)
+                        ui.dwriteTextAligned('YES', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.4,0.5,1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(1460)
+                        ui.setCursorY(465)
+                        ui.dwriteTextAligned('NO', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.4,0.5,1,1))
+
+                        ui.setCursorX(1520)
+                        ui.setCursorY(595)
+
+                        if ui.invisibleButton('conformCarPurchaseYes', vec2(125,65)) and money - tonumber(usedMarket[confirmCarPurchaseIndex] [3]) > 0 then
+                            checkListingsTimer = false
+                            checkListingsClock = os.clock()
+                            money = money - tonumber(usedMarket[confirmCarPurchaseIndex] [3])
+                            carCollectionState[carCollectionAmount] = {}
+                            carCollectionState[carCollectionAmount] [0] = 'empty' -- folderName
+                            carCollectionState[carCollectionAmount] [1] = tostring(10) -- fuel
+                            carCollectionState[carCollectionAmount] [2] = tostring(0) -- carDamage0
+                            carCollectionState[carCollectionAmount] [3] = tostring(0) -- carDamage1
+                            carCollectionState[carCollectionAmount] [4] = tostring(0) -- carDamage2
+                            carCollectionState[carCollectionAmount] [5] = tostring(0) -- carDamage3
+                            carCollectionState[carCollectionAmount] [6] = tostring(1000) -- engineDamage
+                            carCollectionState[carCollectionAmount] [7] = tostring(100) -- oilAmount
+                            carCollectionState[carCollectionAmount] [8] = tostring(100) -- oilQuality
+
+                            carCollection[carCollectionAmount] = usedMarket[confirmCarPurchaseIndex]
+                            carCollectionAmount = carCollectionAmount + 1
+                            usedMarketExpires[confirmCarPurchaseIndex] = tostring(10)
+                            confirmCarPurchase = false
+                        end
+
+                        ui.setCursorX(1680)
+                        ui.setCursorY(595)
+
+                        if ui.invisibleButton('conformCarPurchaseNo', vec2(125,65)) then
+                            confirmCarPurchase = false
+                        end
+                        
+                        ui.pushFont(ui.Font.Title)
+                        ui.setCursorX(1520)
+                        ui.setCursorY(495)
+                        ui.textColored('Do you really want to purchase the', rgbm(0.4,0.5,1,1))
+
+                        ui.pushFont(ui.Font.Title)
+                        ui.setCursorX(1520)
+                        ui.setCursorY(520)
+                        ui.textColored(string.sub(usedMarket[confirmCarPurchaseIndex] [0], 0, 31), rgbm(0.4,0.5,1,1))
+                        
+                        ui.pushFont(ui.Font.Title)
+                        ui.setCursorX(1520)
+                        ui.setCursorY(545)
+                        ui.textColored(string.sub(usedMarket[confirmCarPurchaseIndex] [0], 32, 63), rgbm(0.4,0.5,1,1))
+                        
+                    end
+                    
+
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 2
+                    end
+
+
+                end)
+
+
+            end)
+
+        elseif menuState == 13 then
+
+            ui.toolWindow('ENGINES', vec2(0, 0), vec2(1920,1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('Engine', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -1859,60 +3557,60 @@ function script.drawUI()
 
                     --- ENGINE ---
 
-                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
+                    ui.setCursorX(1080 / 2 + 150)
                     ui.setCursorY(-190)
 
                     ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 302 + 2)
+                    ui.setCursorX(1080 / 2 + 302 + 2)
                     ui.setCursorY(29 + 2)
                     ui.textColored('ENGINE', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 302 + 1)
+                    ui.setCursorX(1080 / 2 + 302 + 1)
                     ui.setCursorY(29 + 1)
                     ui.textColored('ENGINE', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 302)
+                    ui.setCursorX(1080 / 2 + 302)
                     ui.setCursorY(29)
                     ui.textColored('ENGINE', rgbm(0.8,0,1,1))
 
                     --- MONEY ---
 
-                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorX(1080 + 300)
                     ui.setCursorY(-186)
 
                     ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorX(1080 + 330 + 2)
                     ui.setCursorY(-101 + 2)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorX(1080 + 330 + 1)
                     ui.setCursorY(-101 + 1)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorX(1080 + 330)
                     ui.setCursorY(-101)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorX(1080 + 370 + 2)
                     ui.setCursorY(-95 + 2)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorX(1080 + 370 + 1)
                     ui.setCursorY(-95 + 1)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorX(1080 + 370)
                     ui.setCursorY(-95)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
@@ -2160,32 +3858,32 @@ function script.drawUI()
 
                     --- BACK ---
 
-                    ui.setCursorX(uiState.windowSize.x - 450)
+                    ui.setCursorX(1920 - 450)
                     ui.setCursorY(700)
 
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
+                    ui.setCursorX(1920 - 300 + 2)
                     ui.setCursorY(815 + 2)
                     ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
+                    ui.setCursorX(1920 - 300 + 1)
                     ui.setCursorY(815 + 1)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300)
+                    ui.setCursorX(1920 - 300)
                     ui.setCursorY(815)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
-                    ui.setCursorX(uiState.windowSize.x - 420)
+                    ui.setCursorX(1920 - 420)
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 0
+                        menuState = 3
                     end
 
 
@@ -2195,12 +3893,12 @@ function script.drawUI()
             end)
 
 
-        elseif menuState == 4 then
+        elseif menuState == 15 then
 
-            ui.toolWindow('MONEYS', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
+            ui.toolWindow('CARS', vec2(0, 0), vec2(1920,1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
-                ui.childWindow('Money', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
+                ui.childWindow('Cars', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -2228,559 +3926,225 @@ function script.drawUI()
                     end
 
 
-                    --- SERVICES ---
+                    --- GARAGE ---
 
-                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
+                    ui.setCursorX(1080 / 2 + 150)
                     ui.setCursorY(-190)
 
                     ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 2)
+                    ui.setCursorX(1080 / 2 + 342 + 2)
                     ui.setCursorY(29 + 2)
-                    ui.textColored('FINANCES', rgbm(0.1,0.8,1,0.7))
+                    ui.textColored('CARS', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 1)
+                    ui.setCursorX(1080 / 2 + 342 + 1)
                     ui.setCursorY(29 + 1)
-                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
+                    ui.textColored('CARS', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 292)
+                    ui.setCursorX(1080 / 2 + 342)
                     ui.setCursorY(29)
-                    ui.textColored('FINANCES', rgbm(0.8,0,1,1))
+                    ui.textColored('CARS', rgbm(0.8,0,1,1))
 
                     --- MONEY ---
 
-                    ui.setCursorX(uiState.windowSize.y + 300)
+                    ui.setCursorX(1080 + 300)
                     ui.setCursorY(-186)
 
                     ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
+                    ui.setCursorX(1080 + 330 + 2)
                     ui.setCursorY(-101 + 2)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
+                    ui.setCursorX(1080 + 330 + 1)
                     ui.setCursorY(-101 + 1)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330)
+                    ui.setCursorX(1080 + 330)
                     ui.setCursorY(-101)
                     ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
+                    ui.setCursorX(1080 + 370 + 2)
                     ui.setCursorY(-95 + 2)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
+                    ui.setCursorX(1080 + 370 + 1)
                     ui.setCursorY(-95 + 1)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370)
+                    ui.setCursorX(1080 + 370)
                     ui.setCursorY(-95)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
 
 
-                    ui.setCursorX(0)
-                    ui.setCursorY(100)
-
-                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
-
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(59 + 2)
-                    ui.setCursorY(215 + 2)
-                    ui.textColored('TRANSFER cr.', rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(59 + 1)
-                    ui.setCursorY(215 + 1)
-                    ui.textColored('TRANSFER cr.', rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(59)
-                    ui.setCursorY(215)
-                    ui.textColored('TRANSFER cr.', rgbm(0.8,0,1,1))
-
-                    ui.setCursorX(30)
-                    ui.setCursorY(185)
-
-                    if ui.invisibleButton('transfer', vec2(340,130)) then
-                        menuState = 11
-                    end
-
-
-                    --- BACK ---
-
-                    ui.setCursorX(uiState.windowSize.x - 450)
-                    ui.setCursorY(700)
-
-                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
-
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
-                    ui.setCursorY(815 + 2)
-                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
-                    ui.setCursorY(815 + 1)
-                    ui.textColored('BACK', rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300)
-                    ui.setCursorY(815)
-                    ui.textColored('BACK', rgbm(0.8,0,1,1))
-
-                    ui.setCursorX(uiState.windowSize.x - 420)
-                    ui.setCursorY(786)
-
-                    if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 0
-                    end
-
-
-                end)
-
-
-            end)
-
-
-        elseif menuState == 11 then
-
-            ui.toolWindow('TRANSFER', vec2(0, 0), vec2(uiState.windowSize.x,uiState.windowSize.y), function ()
-
-                ui.pushFont(ui.Font.Huge)
-                ui.childWindow('Transfers', vec2(uiState.windowSize.x, uiState.windowSize.y), false, ui.WindowFlags.None, function ()
-
-                    ui.setCursorX(100)
-                    ui.setCursorY(-40)
-
-                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
-
-                    if mortal then
-
-                        ui.pushFont(ui.Font.Huge)
-                        ui.setCursorX(36 - 3)
-                        ui.setCursorY(-55 + 2)
-                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
-
-                        ui.pushFont(ui.Font.Huge)
-                        ui.setCursorX(36 - 1.5)
-                        ui.setCursorY(-55 + 1)
-                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
-
-                        ui.pushFont(ui.Font.Huge)
-                        ui.setCursorX(36)
-                        ui.setCursorY(-55)
-                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
-
-
-                    end
-
-
-                    --- SERVICES ---
-
-                    ui.setCursorX(uiState.windowSize.y / 2 + 150)
-                    ui.setCursorY(-190)
-
-                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 2)
-                    ui.setCursorY(29 + 2)
-                    ui.textColored('TRANSFER', rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 292 + 1)
-                    ui.setCursorY(29 + 1)
-                    ui.textColored('TRANSFER', rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y / 2 + 292)
-                    ui.setCursorY(29)
-                    ui.textColored('TRANSFER', rgbm(0.8,0,1,1))
-
-                    --- MONEY ---
-
-                    ui.setCursorX(uiState.windowSize.y + 300)
-                    ui.setCursorY(-186)
-
-                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 2)
-                    ui.setCursorY(-101 + 2)
-                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330 + 1)
-                    ui.setCursorY(-101 + 1)
-                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 330)
-                    ui.setCursorY(-101)
-                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 2)
-                    ui.setCursorY(-95 + 2)
-                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370 + 1)
-                    ui.setCursorY(-95 + 1)
-                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y + 370)
-                    ui.setCursorY(-95)
-                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-
-                    --- MONEY AMOUNT TRANSFER ---
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 175)
-                    ui.setCursorY(-25)
-
-                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 152 + 2)
-                    ui.setCursorY(58 + 2)
-                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 152 + 1)
-                    ui.setCursorY(58 + 1)
-                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 152)
-                    ui.setCursorY(58)
-                    ui.dwriteTextAligned(moneyTransfer, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 195 + 2)
-                    ui.setCursorY(65 + 2)
-                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 195 + 1)
-                    ui.setCursorY(65 + 1)
-                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 195)
-                    ui.setCursorY(65)
-                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    --- +1 ---
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 450)
-                    ui.setCursorY(245)
-
-                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 235 + 2)
-                    ui.setCursorY(155 + 2)
-                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 235 + 1)
-                    ui.setCursorY(155 + 1)
-                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 235)
-                    ui.setCursorY(155)
-                    ui.dwriteTextAligned('1', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 220 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 507 + 2)
-                    ui.setCursorY(355 + 2)
-
-                    if ui.invisibleButton('+1', vec2(40,40)) and moneyTransfer < money then
-                        moneyTransfer = moneyTransfer + 1
-                    end
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 260 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 553 + 2)
-                    ui.setCursorY(355 + 2)
-
-                    if ui.invisibleButton('-1', vec2(40,40)) and moneyTransfer > 0 then
-                        moneyTransfer = moneyTransfer - 1
-                    end
-
-
-                    --- +10 ---
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 350)
-                    ui.setCursorY(245)
-
-                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 140 + 2)
-                    ui.setCursorY(155 + 2)
-                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 140 + 1)
-                    ui.setCursorY(155 + 1)
-                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 140)
-                    ui.setCursorY(155)
-                    ui.dwriteTextAligned('10', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 120 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 407 + 2)
-                    ui.setCursorY(355 + 2)
-
-                    if ui.invisibleButton('+10', vec2(40,40)) and moneyTransfer < money - 9 then
-                        moneyTransfer = moneyTransfer + 10
-                    end
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 160 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 453 + 2)
-                    ui.setCursorY(355 + 2)
-
-                    if ui.invisibleButton('-10', vec2(40,40)) and moneyTransfer > 9 then
-                        moneyTransfer = moneyTransfer - 10
-                    end
-
-                    --- +100 ---
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 250)
-                    ui.setCursorY(245)
-
-                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 50 + 2)
-                    ui.setCursorY(155 + 2)
-                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 50 + 1)
-                    ui.setCursorY(155 + 1)
-                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 50)
-                    ui.setCursorY(155)
-                    ui.dwriteTextAligned('100', 30, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 20 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
+                    ui.drawRectFilled(vec2(250,200), vec2(1600,400), rgbm(0.2,0.2,0.2,0.9))
+        
                     
-                    ui.setCursorX(uiState.windowSize.y/2 + 307 + 2)
-                    ui.setCursorY(355 + 2)
 
-                    if ui.invisibleButton('+100', vec2(40,40)) and moneyTransfer < money - 99 then
-                        moneyTransfer = moneyTransfer + 100
+                    if loadCheckTimer + 3 < os.clock() and carCollectionAmount > 0 then
+
+                        ui.drawLine(vec2(1540,550), vec2(1760,550), rgbm(0.3,0.3,0.3,1), 75)
+                        ui.drawLine(vec2(1540,650), vec2(1760,650), rgbm(0.3,0.3,0.3,1), 75)
+
+                        ui.drawLine(vec2(780,550), vec2(1120,550), rgbm(0.2,0.2,0.2,0.9), 155)
+
+                        if displayGarageCars then
+                            ui.setCursorX(350)
+                            ui.setCursorY(230)
+                            ui.dwriteTextAligned(carCollection[garageCarCycle] [0], 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+        
+                            ui.setCursorX(336)
+                            ui.setCursorY(295)
+                            ui.dwriteTextAligned(carCollection[garageCarCycle] [2], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,0.8))
+        
+                            ui.setCursorX(336)
+                            ui.setCursorY(340)
+                            ui.dwriteTextAligned(carCollection[garageCarCycle] [1], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,0.8))
+        
+                            ui.setCursorX(1612)
+                            ui.setCursorY(530)
+                            ui.dwriteTextAligned('NEXT', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+        
+                            ui.setCursorX(1583)
+                            ui.setCursorY(630)
+                            ui.dwriteTextAligned('PREVIOUS', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+        
+                            ui.setCursorX(350)
+                            ui.setCursorY(490)
+                            ui.dwriteTextAligned('SELL', 50, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,0,0,1))
+        
+                            ui.setCursorX(350)
+                            ui.setCursorY(560)
+                            ui.dwriteTextAligned('(' .. math.round(carCollection[garageCarCycle] [3] / 2, 0) .. ')', 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+        
+                        end
+
+                        ui.setCursorX(1539)
+                        ui.setCursorY(513)
+
+                        if ui.button('        ', vec2(221,75), ui.ButtonFlags.Repeat) then
+                            if garageCarCycle < carCollectionAmount - 1 then
+                                garageCarCycle = garageCarCycle + 1
+                            else
+                                garageCarCycle = 0
+                            end
+                        end
+
+                        ui.setCursorX(1539)
+                        ui.setCursorY(613)
+
+                        if ui.button('       ', vec2(221,75), ui.ButtonFlags.Repeat) then
+                            if garageCarCycle == 0 then
+                                garageCarCycle = carCollectionAmount - 1
+                            else
+                                garageCarCycle = garageCarCycle - 1
+                            end
+                        end
+
+                        ui.setCursorX(779)
+                        ui.setCursorY(473)
+
+                        if ui.button('         ', vec2(341,155), ui.ButtonFlags.Repeat) then
+                            sellCarCheck = true
+                        end
+
+                    else
+                        ui.setCursorX(350)
+                        ui.setCursorY(230)
+                        ui.dwriteTextAligned('NONE FOR NOW', 60, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+        
+
                     end
 
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 60 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
+                    if sellCarCheck then
 
-                    ui.setCursorX(uiState.windowSize.y/2 + 353 + 2)
-                    ui.setCursorY(355 + 2)
+                        ui.drawLine(vec2(780,685), vec2(1120,685), rgbm(0.2,0.2,0.2,0.9), 65)
 
-                    if ui.invisibleButton('-100', vec2(40,40)) and moneyTransfer > 99 then
-                        moneyTransfer = moneyTransfer - 100
-                    end
+                        ui.drawLine(vec2(780,785), vec2(920,785), rgbm(0.2,0.2,0.2,0.9), 105)
+                        ui.drawLine(vec2(980,785), vec2(1120,785), rgbm(0.2,0.2,0.2,0.9), 105)
 
+                        ui.setCursorX(350)
+                        ui.setCursorY(660)
+                        ui.dwriteTextAligned('ARE YOU SURE?', 35, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
 
-                    --- +1000 ---
+                        ui.setCursorX(250)
+                        ui.setCursorY(750)
+                        ui.dwriteTextAligned('YES', 50, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+        
+                        ui.setCursorX(450)
+                        ui.setCursorY(750)
+                        ui.dwriteTextAligned('NO', 50, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+        
 
-                    ui.setCursorX(uiState.windowSize.y/2 + 150)
-                    ui.setCursorY(245)
+                        ui.setCursorX(779)
+                        ui.setCursorY(733)
 
-                    ui.image('https://i.postimg.cc/6QMPph7g/SQ-BUTTON-BLUE.png',vec2(200,150))
+                        if ui.button('          ', vec2(141,105), ui.ButtonFlags.Repeat) then
+                            sellCarCheck = false
+                            displayGarageCars = false
+                            money = money + tonumber(math.round(carCollection[garageCarCycle] [3] / 2, 0))
+                            for i = garageCarCycle + 1, carCollectionAmount - 1 do
+                                carCollection[i] = carCollection[i + 1]
+                            end
+                            garageCarCycle = garageCarCycle - 1
+                            carCollection[carCollectionAmount] = nil
+                            carCollectionAmount = carCollectionAmount - 1
+                            displayGarageCarsTimer = os.clock()
+                        end
 
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 - 48 + 2)
-                    ui.setCursorY(157 + 2)
-                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+                        ui.setCursorX(979)
+                        ui.setCursorY(733)
 
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 - 48 + 1)
-                    ui.setCursorY(157 + 1)
-                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 - 48)
-                    ui.setCursorY(157)
-                    ui.dwriteTextAligned('1000', 25, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 - 80 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('+', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0,1,0,1))
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 207 + 2)
-                    ui.setCursorY(355 + 2)
-
-                    if ui.invisibleButton('+1000', vec2(40,40)) and moneyTransfer < money - 999 then
-                        moneyTransfer = moneyTransfer + 1000
-                    end
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 - 42 + 2)
-                    ui.setCursorY(205 + 2)
-                    ui.dwriteTextAligned('-', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(1,0,0,1))
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 253 + 2)
-                    ui.setCursorY(355 + 2)
-
-                    if ui.invisibleButton('-1000', vec2(40,40)) and moneyTransfer > 999 then
-                        moneyTransfer = moneyTransfer - 1000
-                    end
-
-
-                    --- MONEY TRANSFER PERSON ---
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 80)
-                    ui.setCursorY(225)
-
-                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(650,500))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 175)
-                    ui.setCursorY(437 + 2)
-                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 175)
-                    ui.setCursorY(437 + 1)
-                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 175)
-                    ui.setCursorY(437)
-                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 300 + 2)
-                    ui.setCursorY(405 + 2)
-                    ui.dwriteTextAligned('NEXT', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.5,0.5,0.5,1))
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 460)
-                    ui.setCursorY(525 + 2)
-
-                    --22
-
-                    if transferPersonType < simstate.connectedCars - 1 then
-                        if ui.invisibleButton('next', vec2(200,100)) then
-                            transferPersonType = transferPersonType + 1
+                        if ui.button('           ', vec2(141,105), ui.ButtonFlags.Repeat) then
+                            sellCarCheck = false
                         end
                     end
 
-                    ui.setCursorX(uiState.windowSize.y/2 + 150)
-                    ui.setCursorY(525 + 2)
-
-                    if transferPersonType > 0 then
-                        if ui.invisibleButton('previous', vec2(250,100)) then
-                            transferPersonType = transferPersonType - 1
-                        end
+                    
+                    if not displayGarageCars and displayGarageCarsTimer + 0.01 < os.clock() then
+                        garageCarCycle = 0
+                        displayGarageCars = true
                     end
-
-                    ui.setCursorX(uiState.windowSize.y/2 + 300)
-                    ui.setCursorY(655 + 2)
-
-
-                    local transferMoney = ac.OnlineEvent({
-                        -- message structure layout:
-                        person = ac.StructItem.float(),
-                        money = ac.StructItem.float(),
-                      }, function (sender, data)
-                        -- got a message from other client (or ourselves; in such case `sender.index` would be 0):
-                        if ac.getDriverName(transferPersonType) == ac.getDriverName(1) then
-                            ac.debug('Got message: from', sender and sender.index or -1)
-                            ac.debug('Got message: text', data.person)
-                            ac.debug('Got message: mood', data.money)
-                        end
-                      end)
-
-                    if ui.button('TRANSFER', vec2(250,100)) then
-                        
-                        transferMoney{ person = transferPersonType , money = moneyTransfer }
-
-                    end
-
-                    if moneyRecieved > 0 then
-                        money = money + moneyRecieved
-                    end
-
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.y/2 + 60 + 2)
-                    ui.setCursorY(405 + 2)
-                    ui.dwriteTextAligned('PREVIOUS', 50, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.5,0.5,0.5,1))
 
 
                     --- BACK ---
 
-                    ui.setCursorX(uiState.windowSize.x - 450)
+                    ui.setCursorX(1920 - 450)
                     ui.setCursorY(700)
 
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 2)
+                    ui.setCursorX(1920 - 300 + 2)
                     ui.setCursorY(815 + 2)
                     ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300 + 1)
+                    ui.setCursorX(1920 - 300 + 1)
                     ui.setCursorY(815 + 1)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(uiState.windowSize.x - 300)
+                    ui.setCursorX(1920 - 300)
                     ui.setCursorY(815)
                     ui.textColored('BACK', rgbm(0.8,0,1,1))
 
-                    ui.setCursorX(uiState.windowSize.x - 420)
+                    ui.setCursorX(1920 - 420)
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 4
+                        menuState = 3
                     end
 
 
@@ -2798,10 +4162,10 @@ function script.drawUI()
 
     if mainMenu == 1 and tempEnabled == 1 then
 
-        ui.transparentWindow('TEMPWINDOW', vec2(0, 0), vec2(uiState.windowSize.x / 3,uiState.windowSize.y / 3 ), function ()
+        ui.transparentWindow('TEMPWINDOW', vec2(0, 0), vec2(1920 / 3,1080 / 3 ), function ()
 
             ui.pushFont(ui.Font.Huge)
-            ui.childWindow('temp', vec2(uiState.windowSize.x / 3, uiState.windowSize.y / 3), false, ui.WindowFlags.None, function ()
+            ui.childWindow('temp', vec2(1920 / 3, 1080 / 3), false, ui.WindowFlags.None, function ()
 
 
                 ui.setCursorX(-9)
@@ -2845,12 +4209,12 @@ function script.drawUI()
     end
 
     if showMessageRefuel0 or showMessageRefuel1 then
-        ui.transparentWindow('RefuelMessage', vec2(uiState.windowSize.x / 2 - 350, 100), vec2(700,uiState.windowSize.y - 100), function ()
+        ui.transparentWindow('RefuelMessage', vec2(1920 / 2 - 350, 100), vec2(700,1080 - 100), function ()
             ui.pushFont(ui.Font.Huge)
             if showMessageRefuel1 then
-                ui.textAligned('Refueling...', 0.14, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Refueling...', 0.14, vec2(1920,0))
             elseif showMessageRefuel0 then
-                ui.textAligned('Press [SPACEBAR] to refuel car', 0.02, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Press [SPACEBAR] to refuel car', 0.02, vec2(1920,0))
             end
             if showMessageRefuel1 and ac.isKeyDown(32) then
                 showMessageRefuel1 = false
@@ -2862,19 +4226,19 @@ function script.drawUI()
     end
 
     if showMessageRepair0 or showMessageRepair0S or showMessageRepair1 then
-        ui.transparentWindow('RepairMessage', vec2(uiState.windowSize.x / 2 - 350, 100), vec2(700,uiState.windowSize.y - 100), function ()
+        ui.transparentWindow('RepairMessage', vec2(1920 / 2 - 350, 100), vec2(700,1080 - 100), function ()
             ui.pushFont(ui.Font.Huge)
             if showMessageRepair1 then
-                ui.textAligned('Car Repaired!', 0.13, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Car Repaired!', 0.13, vec2(1920,0))
             elseif showMessageRepair0 or showMessageRepair0S then
                 if showMessageRepair0 then
                     ui.pushFont(ui.Font.Huge)
-                    ui.textAligned('Press [SPACEBAR] to repair car', 0.02, vec2(uiState.windowSize.x,0))
+                    ui.textAligned('Press [SPACEBAR] to repair car', 0.02, vec2(1920,0))
                 elseif showMessageRepair0S then
                     ui.pushFont(ui.Font.Huge)
-                    ui.textAligned('Press [SPACEBAR] to repair car', 0.02, vec2(uiState.windowSize.x,0))
+                    ui.textAligned('Press [SPACEBAR] to repair car', 0.02, vec2(1920,0))
                     ui.pushFont(ui.Font.Title)
-                    ui.textAligned('Secret Car Repair Shop', 0.14, vec2(uiState.windowSize.x,0))
+                    ui.textAligned('Secret Car Repair Shop', 0.14, vec2(1920,0))
                 end
             end
             ui.pushFont(ui.Font.Huge)
@@ -2887,26 +4251,26 @@ function script.drawUI()
     end
 
     if showMessageERefuel0 or showMessageERefuel1 or showMessageERefuel2 or showMessageERefuel3 then
-        ui.transparentWindow('TowRefuelMessage', vec2(0 + (uiState.windowSize.x * 0.2), 100), vec2(uiState.windowSize.x / 1.2,uiState.windowSize.y - 100), function ()
+        ui.transparentWindow('TowRefuelMessage', vec2(0 + (1920 * 0.2), 100), vec2(1920 / 1.2,1080 - 100), function ()
             ui.pushFont(ui.Font.Huge)
             if showMessageERefuel0 then
-                ui.textAligned('Press [SPACEBAR] for tow truck to bring 5 liters of fuel.', 0, vec2(uiState.windowSize.x,0))
-                ui.textAligned('Estimated wait time in minutes is:', 0.1, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Press [SPACEBAR] for tow truck to bring 5 liters of fuel.', 0, vec2(1920,0))
+                ui.textAligned('Estimated wait time in minutes is:', 0.1, vec2(1920,0))
 
-                ui.setCursorX(uiState.windowSize.x * 0.43)
+                ui.setCursorX(1920 * 0.43)
                 ui.setCursorY(80.99)
                 ui.text(fueltimewait)
             end
             if showMessageERefuel3 and showMessageERefuelClock + 5 > os.clock() then
-                ui.textAligned('Emergency Fuel Canceled', 0.22, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Emergency Fuel Canceled', 0.22, vec2(1920,0))
             elseif showMessageERefuel2 and showMessageERefuelClock + 5 > os.clock() then
-                ui.textAligned('Fuel Delivered!', 0.25, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Fuel Delivered!', 0.25, vec2(1920,0))
             elseif showMessageERefuel1 then
-                ui.textAligned('Tow truck is on the way, please wait in the general area.', 0, vec2(uiState.windowSize.x,0))
-                ui.textAligned('DO NOT DISCONNECT FROM THE SERVER.', 0.1, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Tow truck is on the way, please wait in the general area.', 0, vec2(1920,0))
+                ui.textAligned('DO NOT DISCONNECT FROM THE SERVER.', 0.1, vec2(1920,0))
 
                 ui.pushFont(ui.Font.Title)
-                ui.textAligned('Press [CTRL] + [SHIFT] + [TAB] to cancel at any time.', 0.22, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Press [CTRL] + [SHIFT] + [TAB] to cancel at any time.', 0.22, vec2(1920,0))
             end
             if showMessageERefuel3 and showMessageERefuelClock + 5 < os.clock() and showMessageERefuelClock + 10 > os.clock() or showMessageERefuel2 and showMessageERefuelClock + 5 < os.clock() and showMessageERefuelClock + 10 > os.clock() then
                 showMessageERefuel3 = false
@@ -2917,24 +4281,24 @@ function script.drawUI()
     end
 
     if showMessageERepair0 or showMessageERepair1 or showMessageERepair2 then
-        ui.transparentWindow('TowMessage', vec2(0 + (uiState.windowSize.x * 0.1), 100), vec2(uiState.windowSize.x / 1.1,uiState.windowSize.y - 100), function ()
+        ui.transparentWindow('TowMessage', vec2(0 + (1920 * 0.1), 100), vec2(1920 / 1.1,1080 - 100), function ()
             ui.pushFont(ui.Font.Huge)
             if showMessageERepair0 then
-                ui.textAligned('Do you want a tow? Press [SPACE] to confirm or [CTRL] to cancel.', 0.1, vec2(uiState.windowSize.x,0))
-                ui.textAligned('Estimated wait time in minutes is:', 0.25, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Do you want a tow? Press [SPACE] to confirm or [CTRL] to cancel.', 0.1, vec2(1920,0))
+                ui.textAligned('Estimated wait time in minutes is:', 0.25, vec2(1920,0))
 
-                ui.setCursorX(uiState.windowSize.x * 0.55)
+                ui.setCursorX(1920 * 0.55)
                 ui.setCursorY(80.99)
                 ui.text(timewait)
             end
             if showMessageERepair2 and showMessageERepairClock + 5 > os.clock() then
-                ui.textAligned('Tow Service Canceled', 0.35, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Tow Service Canceled', 0.35, vec2(1920,0))
             elseif showMessageERepair1 then
-                ui.textAligned('Tow truck is on the way, please wait in the general area.', 0.25, vec2(uiState.windowSize.x,0))
-                ui.textAligned('DO NOT DISCONNECT FROM THE SERVER.', 0.31, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Tow truck is on the way, please wait in the general area.', 0.25, vec2(1920,0))
+                ui.textAligned('DO NOT DISCONNECT FROM THE SERVER.', 0.31, vec2(1920,0))
 
                 ui.pushFont(ui.Font.Title)
-                ui.textAligned('Press [CTRL] + [SHIFT] + [TAB] to cancel at any time.', 0.38, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Press [CTRL] + [SHIFT] + [TAB] to cancel at any time.', 0.38, vec2(1920,0))
             end
             if showMessageERepair2 and showMessageERepairClock + 5 < os.clock() and showMessageERepairClock + 10 > os.clock() then
                 showMessageERepair2 = false
@@ -2945,28 +4309,28 @@ function script.drawUI()
     end
 
     if showMessageToll0 or showMessageToll1 or showMessageToll2 or showMessageToll3 or showMessageToll4 or showMessageToll5 then
-        ui.transparentWindow('TollMessage', vec2(0 + (uiState.windowSize.x * 0.1), 100), vec2(uiState.windowSize.x / 1.1,uiState.windowSize.y - 100), function ()
+        ui.transparentWindow('TollMessage', vec2(0 + (1920 * 0.1), 100), vec2(1920 / 1.1,1080 - 100), function ()
             ui.pushFont(ui.Font.Huge)
             if showMessageToll0 and showMessageTollClock + 5 > os.clock() then
-                ui.textAligned('Payment Accepted, Have a Great Day!', 0.35, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Payment Accepted, Have a Great Day!', 0.35, vec2(1920,0))
             elseif showMessageToll0 and showMessageTollClock + 6 < os.clock() then
                 showMessageToll0 = false
             elseif showMessageToll3 then
-                ui.textAligned('Processing Please Wait...', 0.36, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Processing Please Wait...', 0.36, vec2(1920,0))
             elseif showMessageToll4 then
-                ui.textAligned('Press [SPACE] to Pay the Toll', 0.35, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Press [SPACE] to Pay the Toll', 0.35, vec2(1920,0))
             elseif showMessageToll5 then
-                ui.textAligned('Please Stop at the Toll Booth Ahead', 0.33, vec2(uiState.windowSize.x,0))
+                ui.textAligned('Please Stop at the Toll Booth Ahead', 0.33, vec2(1920,0))
             end
     
     
             if showMessageToll1 and showMessageTollClock + 5 > os.clock() then
-                ui.textAligned('ETC Card Error. Please Back Up and Try Again.', 0.32, vec2(uiState.windowSize.x,0))
+                ui.textAligned('ETC Card Error. Please Back Up and Try Again.', 0.32, vec2(1920,0))
             elseif showMessageToll1 and showMessageTollClock + 6 < os.clock() then
                 showMessageToll1 = false
             end
             if showMessageToll2 and showMessageTollClock + 5 > os.clock() then
-                ui.textAligned('ETC Card Error. Please stop at the toll booth to pay.', 0.25, vec2(uiState.windowSize.x,0))
+                ui.textAligned('ETC Card Error. Please stop at the toll booth to pay.', 0.25, vec2(1920,0))
             elseif showMessageToll2 and showMessageTollClock + 6 < os.clock() then
                 showMessageToll2 = false
             end
@@ -2975,11 +4339,31 @@ function script.drawUI()
     end
 
     if showTollFine == 1 then
-        ui.transparentWindow('TollMessage', vec2(0 + (uiState.windowSize.x * 0.1), 100), vec2(uiState.windowSize.x / 1.1,uiState.windowSize.y - 100), function ()
+        ui.transparentWindow('TollMessage', vec2(0 + (1920 * 0.1), 100), vec2(1920 / 1.1,1080 - 100), function ()
             ui.pushFont(ui.Font.Huge)
-            ui.textAligned('Toll booth skipped, penalty for 30 seconds...', 0.25, vec2(uiState.windowSize.x,0))
+            ui.textAligned('Toll booth skipped, penalty for 30 seconds...', 0.25, vec2(1920,0))
 
         end)
     end
+
+end
+
+local transferMoney = ac.OnlineEvent({
+    -- message structure layout:
+    person = ac.StructItem.string(50),
+    money = ac.StructItem.float(),
+  }, function (sender, data)
+    -- got a message from other client (or ourselves; in such case `sender.index` would be 0):
+    if data.person == ac.getDriverName(0) then
+        ac.debug('Got from:', data.person)
+        ac.debug('Got money:', data.money)
+        money = money + data.money
+        data.money = 0
+    end
+  end)
+
+function TransferMoney()
+
+    transferMoney{ person = ac.getDriverName(transferPersonType), money = moneyTransfer }
 
 end
