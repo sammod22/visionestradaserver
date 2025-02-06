@@ -15,12 +15,12 @@ local menu3 = ui.MediaPlayer()
 local menu4 = ui.MediaPlayer()
 local menugtauto = ui.MediaPlayer()
 
-menu0:setSource('/visionestradaserver/menu0.mp3'):setAutoPlay(false)
-menu1:setSource('/visionestradaserver/menu1.mp3'):setAutoPlay(false)
-menu2:setSource('/visionestradaserver/menu2.mp3'):setAutoPlay(false)
-menu3:setSource('/visionestradaserver/menu3.mp3'):setAutoPlay(false)
-menu4:setSource('/visionestradaserver/menu4.mp3'):setAutoPlay(false)
-menugtauto:setSource('/visionestradaserver/menugtauto.mp3'):setAutoPlay(false)
+menu0:setSource('https://github.com/sammod22/visionestradaserver/blob/main/menu0.mp3'):setAutoPlay(false)
+menu1:setSource('https://github.com/sammod22/visionestradaserver/blob/main/menu0.mp3'):setAutoPlay(false)
+menu2:setSource('https://github.com/sammod22/visionestradaserver/blob/main/menu0.mp3'):setAutoPlay(false)
+menu3:setSource('https://github.com/sammod22/visionestradaserver/blob/main/menu0.mp3'):setAutoPlay(false)
+menu4:setSource('https://github.com/sammod22/visionestradaserver/blob/main/menu0.mp3'):setAutoPlay(false)
+menugtauto:setSource('https://github.com/sammod22/visionestradaserver/blob/main/menu0.mp3'):setAutoPlay(false)
 
 local cartemp = {0, 0, 0}
 local cartempgoal = {0, 0, 0}
