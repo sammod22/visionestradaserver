@@ -4,9 +4,9 @@ local deathPlayerChance = math.randomseed(sim.timeSeconds)
 local deathSound0 = ui.MediaPlayer()
 local deathSound1 = ui.MediaPlayer()
 local deathSound2 = ui.MediaPlayer()
-deathSound0:setSource('https://rr1---sn-vgqsrn6l.googlevideo.com/videoplayback?expire=1738861600&ei=wJekZ5TSC9vf7OsPmPPZqQU&ip=128.14.229.28&id=o-AKuJMI5_apvDN6PzGJC7RcFtkb67jWANH6m4rOtpEuLQ&itag=18&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-OKXPuHt4NuWw2ukcGWGXM9akf5dMa0lneFujGYLeQG8TjYaJfSuIsxbrS5tYvrnseOH3ZuK6Jy&spc=9kzgDTzOO4dDA7xuwIkEdj_pq7czMH3aje3ILFEhe0kcAdpTK5QCMhvwc3J5PfYdnQ&vprv=1&svpuc=1&mime=video%2Fmp4&ns=sCkg34Vw4QnpfwVUnq3_nZYQ&rqh=1&gir=yes&clen=522684&ratebypass=yes&dur=83.127&lmt=1738839775442478&fexp=24350590,24350737,24350827,24350934,24350961,24350976,24350979,24351028,24351059,24351082,51326932,51331020,51371294&c=MWEB&sefc=1&txp=6209224&n=jVqtzVVwbMmj8g&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cratebypass%2Cdur%2Clmt&sig=AJfQdSswRAIgSad1oUEqY8DntMlq2q1N5TDP8YwllZimKAwlcBH6j5cCIHNM5HdDRoyKKD1io1nxz1r55RJ7e4yThKFr0_885jiV&title=deathSound0&redirect_counter=1&cm2rm=sn-un5e77z&rrc=80&req_id=67eb316e3cd6a3ee&cms_redirect=yes&met=1738840012,&mh=KI&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=34&mn=sn-vgqsrn6l&ms=ltu&mt=1738839631&mv=m&mvi=1&pl=34&rms=ltu,au&lsparams=met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRQIhAMO4tL2kpwdbJyhZU5tabW6IqUhp0WIjW5mGVe_JTbE_AiAcbU-HRWccn3Slt_naoSJxmTSprJqtW6EKUs11LWbMrQ%3D%3D'):setAutoPlay(false)
-deathSound1:setSource('https://rr2---sn-vgqsknzr.googlevideo.com/videoplayback?expire=1738861660&ei=_JekZ5OgEKrds8IPoPjPqAY&ip=128.14.226.191&id=o-ACCo_ubJW-7Bh1uY0nMdYF9PLSYgpT2oPEzMEDYDe2he&itag=18&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-Mvgs_Z148RcluKlTDIYtXgotAbh_hwnnoeaMuJ_PKkLoAouV9SAUu3NxzLN2Ng591dzyFgSpHE&spc=9kzgDcODXEbFoO71OEtHfzFQj_tUIUna-23q9MsNz4udwIo1Kjvh_q9L9RwQzcDDOw&vprv=1&svpuc=1&mime=video%2Fmp4&ns=IrCicQImbrSNI9t1f7dA3WAQ&rqh=1&gir=yes&clen=522684&ratebypass=yes&dur=83.127&lmt=1738839820529211&fexp=24350590,24350737,24350825,24350827,24350934,24350961,24350976,24351028,24351059,24351082,51326932,51331020,51371294&c=MWEB&sefc=1&txp=6209224&n=nAMGGdqunCtDNQ&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cratebypass%2Cdur%2Clmt&sig=AJfQdSswRAIgLiM0z_utBgfA_5kVRqWWGiLYpeeelkM9TN5T6fXoK7sCIE2YxhqcXGrf5XcjsVmFLPR7J9XTfpADC5V-JPDrvlEJ&title=deathSound1&redirect_counter=1&cm2rm=sn-un5e77l&rrc=80&req_id=f4d86c2b7c1ea3ee&cms_redirect=yes&met=1738840068,&mh=PX&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=34&mn=sn-vgqsknzr&ms=ltu&mt=1738839631&mv=m&mvi=2&pl=34&rms=ltu,au&lsparams=met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRQIgaMFQU8ZfUTuPhLY2gewNB_q79N1iBm0NEazQL9pcg0ECIQCMNjfyFGkm7C6T3j2xYF4-NEISNQKERiCHOXb0F87hsA%3D%3D'):setAutoPlay(false)
-deathSound2:setSource('https://rr2---sn-vgqsrnek.googlevideo.com/videoplayback?expire=1738861700&ei=JJikZ_uMN4OU1d8Pp_GViAI&ip=152.32.164.223&id=o-ADZnRZCjy4ssUrfOusmxHJNpBFpcc9wPwIOv8D7HfwVn&itag=18&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-NUK_isHHKcp_y3SPkrInmHFaDLuLHnChI6erEcIFDkdR8hS8OSVYrp0dtnfnPRtKSSWCkPRzli&spc=9kzgDfG7Ozwh4k6p3MOIRJtXY4lAlOXXwwTZWvYukPJAus5ljuUfxk1cL35QRlm4Cg&vprv=1&svpuc=1&mime=video%2Fmp4&ns=mhu-4JWO0JRMRRMbJBWxZcUQ&rqh=1&gir=yes&clen=510763&ratebypass=yes&dur=81.130&lmt=1738839842331087&fexp=24350590,24350737,24350827,24350934,24350961,24350976,24351028,24351059,24351082,51326932,51331020,51371294&c=MWEB&sefc=1&txp=6209224&n=9GN0tlln5SS9vA&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cratebypass%2Cdur%2Clmt&sig=AJfQdSswRgIhAPl5VNFrYFqv2splsGl5xhBKxoE371MPnV_WhYyWG9VGAiEAndYE29dVieyIvtHKqa_hlOHvfIf-NjpnVPfQMyxCym0%3D&title=deathSound2&redirect_counter=1&cm2rm=sn-un5y7z&rrc=80&req_id=91de009fa7e7a3ee&cms_redirect=yes&met=1738840107,&mh=yu&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=34&mn=sn-vgqsrnek&ms=ltu&mt=1738839631&mv=m&mvi=2&pl=34&rms=ltu,au&lsparams=met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRQIgMMmIKTCOJc1imPxl6pRsXt3OqqJZ_0ILA_GrA5bnXpQCIQDegYxyI2MtmgB5mw2Aw_yAJqLdUV65KJ7e39AaMQNeIQ%3D%3D'):setAutoPlay(false)
+deathSound0:setSource('http://docs.google.com/uc?export=open&id=1XoeTUqU6TDgo0zk7Xo3ai-oliXvXwhlk'):setAutoPlay(false)
+deathSound1:setSource('http://docs.google.com/uc?export=open&id=1hArZQuTvT1FqEEovr31eNnJm1Swk4_Ce'):setAutoPlay(false)
+deathSound2:setSource('http://docs.google.com/uc?export=open&id=1nB3-hoj4q7vvVxyM4Sse2M4kZmNWL-8X'):setAutoPlay(false)
 
 local menu0 = ui.MediaPlayer()
 local menu1 = ui.MediaPlayer()
@@ -15,12 +15,12 @@ local menu3 = ui.MediaPlayer()
 local menu4 = ui.MediaPlayer()
 local menugtauto = ui.MediaPlayer()
 
-menu0:setSource('https://rr1---sn-vgqsrn66.googlevideo.com/videoplayback?expire=1738858646&ei=NoykZ8-WF5W46dsPid7FgQY&ip=176.6.141.107&id=o-AI8NTjY1V8umNOzmotiHNEBf_9yQzqDj3-brqI6MaC9J&itag=140&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-OkTFOac8LIUBfszoseIpFTRZIaUwWkq0DZ48fu9yL2oiqSXum_a2hqbsNiMxE4O2XjftA50tcA&spc=9kzgDcDzrAUiLOR0jMeDooKlEqwVgw0qTXblkP1H5fee1kl_GA&vprv=1&svpuc=1&mime=audio%2Fmp4&ns=aYtwhv-acK0C4kSCNylUsGkQ&rqh=1&gir=yes&clen=2639907&dur=163.073&lmt=1711776636611939&keepalive=yes&fexp=24350590,24350737,24350827,24350934,24350961,24350976,24350978,24351028,24351059,24351082,51326932,51355912,51371294&c=WEB&sefc=1&txp=1318224&n=FpitvkdhQT5iUw&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRAIgSzIczO24vroMKYHZhkKBvDsW0hF_W8YUFLUUrCGVPoUCIH73dQ7U1C5Tvdz47xy9IYDf2spSUA18mfN0VIp0C-p9&pot=MnS_ZIWs17f6wb9YfwsNHifLmAfbLRJdZq3zHVTrrusb-LTT7VJYgDI5mRA-55GaAhXtoIUIC-7hduw-LrnrA4JG7V88b-FvmzpqcbFHbeE584PAdOw7GZ5JcH1g_Y1520OvCyl8NTbCG5aGIg0RtUMwqwJ1gw==&rm=sn-uxax4vopj5qx-cxge7e,sn-4g5ekk76&rrc=79,104&req_id=55e6c3f13482a3ee&rms=rdu,au&redirect_counter=2&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1738837053,&mh=5J&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=29&mn=sn-vgqsrn66&ms=rdu&mt=1738836775&mv=m&mvi=1&pl=34&lsparams=ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRAIgTuKslQEJ2VZAuJKAc4rYmqj6VW_jSMo0rnlCn5ik_98CIGTSBI8AlKMXKLcn5tH9b_pyTr7Ld0Rc4CZR--WAhqwA'):setAutoPlay(false)
-menu1:setSource('https://rr4---sn-vgqsrnll.googlevideo.com/videoplayback?expire=1738858754&ei=ooykZ__tF-Tn6dsP_cy2gAM&ip=176.6.129.72&id=o-AMrg7zzvOopCv242YKvDv9tulTmtLQeNapFr4T-uZv3A&itag=140&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-OQ45Cr8Lvqt-cj0yoEdcIHL6xHzjzqDyQAPtr9hMbz-2lAiaLGFBbbtc4HI_lWOZiAeF3BzMDK&spc=9kzgDedpLYfKoiEwmnQxTumZTWUhCWeohwB36m3KOQhK_amhOg&vprv=1&svpuc=1&mime=audio%2Fmp4&ns=_5puo9peVmiHKwZQ1DuycmUQ&rqh=1&gir=yes&clen=2639998&dur=163.073&lmt=1729373412010457&keepalive=yes&fexp=24350590,24350737,24350827,24350934,24350961,24350976,24351028,24351059,24351082,51326932,51355912,51371294,51387516&c=WEB&sefc=1&txp=1318224&n=KheDV1dkwDB3Ig&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRAIgPUvfFR9PzO3lx7GO8uDHf0uwCz_BEDZzyHTBA2IrgYwCIHJqax5B6zvBlY-FN3MFBFB52UZQqTorha_uNz3LXqAN&pot=MnSBiR0bduY03IG1YRxivAJKoMtWwfRPPpTAe0WxPvAB0mcFxljkAHLj1lcnraVz_rbADFK2eIDpvVi1y5FY4r2pq5oCW1va9DRWXP8Lk5Iu5qrpp84sIGwwkS5GmrblPwGScrA1NuGnqP-NwGjEJyopCexb3g==&rm=sn-uxax4vopj5qx-cxgs7l&rrc=79,80&req_id=2a7fecdea360a3ee&redirect_counter=2&cm2rm=sn-4g5ezk7e&cms_redirect=yes&cmsv=e&met=1738837158,&mh=-r&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=34&mn=sn-vgqsrnll&ms=ltu&mt=1738836989&mv=m&mvi=4&pl=34&rms=ltu,au&lsparams=met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRQIgSckIiOgS-FLsv4h0s2UmqXi2R8lxbRled21gTmdRIrQCIQCW5LDrahKpTkkLh5GWCJLehLTFxp348p81Te0oQ7Qvqw%3D%3D'):setAutoPlay(false)
-menu2:setSource('https://rr4---sn-vgqsrn67.googlevideo.com/videoplayback?expire=1738858720&ei=gIykZ86oLZvk6dsPyevjqQs&ip=176.1.241.153&id=o-AGCB3VV4eS748wZxoQCq7Sm8ONmXxT_OgybuBwremHAI&itag=140&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-Ou1d4xrqXjpx7nALz5AjjBvbIPJ60TG_bYDDlx7OugDqsW5YMLeghusLTtq9ADgBcNaA6W9Y0m&spc=9kzgDdKnGuTUs0twlJNfyaNMBEBmlOTbbZo6nNifRoABcDy-GQ&vprv=1&svpuc=1&mime=audio%2Fmp4&ns=QbrKN1Gcf9LFgbjH5Yl29aAQ&rqh=1&gir=yes&clen=2218978&dur=137.067&lmt=1706317943883055&keepalive=yes&fexp=24350590,24350737,24350827,24350934,24350961,24350976,24350978,24351028,24351059,24351063,24351082,51326932,51355912,51371294&c=WEB&sefc=1&txp=1318224&n=W2889bW2ZmA8rA&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRAIgS8_K3fdNBzsUG_b3GcdpvzRW0eGupJYa_z4RaVQCrFoCIGgPsAulPG5682OiCl5wya95leSF2bChKA2xLI9LXBw-&pot=MnQugkgqmYNhcS6-MEuiXTRIxVQcKeDlmvB-UOF8y2dGs83XMTGL08ooY6EEe9QL7XOEciMleyNRxzhHo-iRIA_SQ6c9FAfNYSbtVkddGNVZIkz17Eacdq6D5y2GBNcm1tWwaOx5WGM_v2lpDXRcop6MxaF9aQ==&rm=sn-uxax4vopj5qx-q0n67l,sn-4g5er676&rrc=79,104&req_id=828878b14feda3ee&rms=rdu,au&redirect_counter=2&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1738837124,&mh=27&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=29&mn=sn-vgqsrn67&ms=rdu&mt=1738836775&mv=m&mvi=4&pl=34&lsparams=ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRAIgMsuDTasgDujU5ZSRl-m2ItizSXWoyjruRIfPWy5TuaUCIBKbUjg3UUDnr4O-Zk0E0NugHql0jIkGcbTpZMIDEROn'):setAutoPlay(false)
-menu3:setSource('https://rr1---sn-vgqsknly.googlevideo.com/videoplayback?expire=1738858679&ei=V4ykZ6q-CseBi9oP2I2_-Qk&ip=176.1.240.221&id=o-AMqJUwBZwGqWBEkJfgnn7e9zZOIVE_iIWK6LSgk3Wqgv&itag=140&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-OsMLQBfRPG1jwZ8Yq5j7bd_LKUygQrWpfi2PcYTWG2fLqQHyuAK5udPmOri0-Bzoen1TIqhT-O&spc=9kzgDThLrqFljbqj4FDf-M_CVpPFYB7zKBSDmd-hjwg16dJiEA&vprv=1&svpuc=1&mime=audio%2Fmp4&ns=SICHLr0SfkWhOp3DS66TgB4Q&rqh=1&gir=yes&clen=2082539&dur=131.076&lmt=1495478606941966&keepalive=yes&fexp=24350590,24350737,24350827,24350934,24350961,24350977,24350978,24351028,24351059,24351063,24351082,24351093,51326932,51355912,51371294&c=WEB&sefc=1&n=aGY4Uckir4jZUQ&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRQIhANOdvGmc9KJILtPyW6J5XSyb7_v9Vix0_P0yFFtoSc5nAiBV9DTaoN-ON4YOzoFLeepEdue0kO1ma-gl__U6sPRUmQ%3D%3D&pot=MnQoVqacU5k5wihq1Gih6ZWvMKFOpsp7e1A1geM93Q3nEDhDcUkUtUj-NBf9VEYPO7emRmUEpTQULC6oWJ5gnDCp7ZitVsBt61NPa9H6EVOgfSSWWBdEIdH7IxaV5q8VPwVVldca6QA3cVR80ExPZey1REeDhg==&rm=sn-uxax4vopj5qx-q0n67d&rrc=79,80&req_id=511bfc5bb8f3a3ee&redirect_counter=2&cm2rm=sn-4g5e6676&cms_redirect=yes&cmsv=e&met=1738837082,&mh=Qz&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=34&mn=sn-vgqsknly&ms=ltu&mt=1738836748&mv=m&mvi=1&pl=34&rms=ltu,au&lsparams=met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRQIhAJxp6wumLLpzCZWAAyJNDVKu-slAEWWoSuWBnKqBLvxkAiB8IPkfwJLxe4s5HYIRCR43KMiwJB0cwrU5lWVuYkFHpQ%3D%3D'):setAutoPlay(false)
-menu4:setSource('https://rr5---sn-vgqskn67.googlevideo.com/videoplayback?expire=1738858785&ei=wYykZ4_2G8C56dsP6Zml6AM&ip=176.1.197.49&id=o-ANgzUo07UvxQQXWND6SR1wUxhwv_UmgyEWjtneDIA3sH&itag=140&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-O5rQ0srHYis5sUPkT6KHshkQBg4Uw8_e610SbTXihIPVVVwSN3_rZ3K8Ej9Ruso9HLCJo6PWyA&spc=9kzgDYYkjhoBDPDFsmeUKx6Vkja6XLkaSIRGOaGeAE1VZPLZ6A&vprv=1&svpuc=1&mime=audio%2Fmp4&ns=q07cIXxPeSGPJjtSW2jzXQIQ&rqh=1&gir=yes&clen=2526851&dur=156.084&lmt=1726905819134630&keepalive=yes&fexp=24350590,24350737,24350827,24350934,24350961,24350976,24351028,24351059,24351082,51326932,51355912,51371294&c=WEB&sefc=1&txp=1318224&n=D_YbDxpggevSzw&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRgIhAIdp2MiP15f4RDds6ty_dpm2L8McZvt0MLQNwUQbxyrnAiEA9QPCKGYV0OZ1KuUk2ODCDUA8qGwcEgX2YluSZql4YYY%3D&pot=MnS8asfWmQfYALxW0cDVG2aG8yM2Bbl5dP40rqEaOhluTqDEQmS57ooWgY6gvKgkgEkaPU-acJnhuvbjCmuPUI-j0CzJ6ckDk-KyT2yzBiUSs19u8lW5VdZJmvG_r0nXWkjJ1pX6phxC7-iVdDsn6Pp_VUQT6g==&rm=sn-uxax4vopj5qx-q0n67l,sn-4g5e6y7s&rrc=79,104&req_id=7caaf5fefafda3ee&rms=rdu,au&redirect_counter=2&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1738837189,&mh=zS&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=29&mn=sn-vgqskn67&ms=rdu&mt=1738837010&mv=m&mvi=5&pl=34&lsparams=ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRgIhAPzAtyZDuMERAYSiWWdfQ0BhpN9p2tAJramB7LE-aGFxAiEAvs6U0E_7iYbSjpBhuEbTluN6-uwltJ8QXS_LHNAr8R4%3D'):setAutoPlay(false)
-menugtauto:setSource('https://rr2---sn-vgqsrnz7.googlevideo.com/videoplayback?expire=1738858830&ei=7oykZ-itNNi06dsP46jjgAk&ip=176.1.196.124&id=o-ABiKYBwPJLKwNO2QYF7VdowyJSQ-VYZdL8AIn4JKq8xL&itag=140&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&bui=AY2Et-O4iQqyORFIyXKtd4NybsVxInNnpmhvcaQZumYH5qkOfNdu2oGWj-0G4u3frHPSvch-jgc6U6cb&spc=9kzgDaE8C3DCn9jIaWFRCaxfcjKNoJaLqObaoE431KV4enQhsw&vprv=1&svpuc=1&mime=audio%2Fmp4&ns=YrK54NoBn0Kj-Yqre070kq8Q&rqh=1&gir=yes&clen=2559055&dur=158.081&lmt=1707174871833082&keepalive=yes&fexp=24350590,24350737,24350827,24350934,24350961,24350976,24351028,24351059,24351082,24351092,51326932,51355912,51371294&c=WEB&sefc=1&txp=1318224&n=ev-j_xbFLUH6yw&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AJfQdSswRgIhAJt2mceBHBmsjPRXrjEvWh-2DizL4e9a9_kIu922xvKfAiEA9ueEsafo2jSbkWh0yhFCzMNYHBwVzsJPh-y_ybU_YPM%3D&pot=MnQ6QaPTjiQdTzp9Nu28uAsVrYaFUc9y0KPa67Aa1wsnTaSUXlsDLakEk11Vf9xSLZ8eTp2HlDq9B8Ri1VQl5_6ui04C4Hb1ZAuilIL5CzrJnnmiLKLlB3iJ-ns-pb9W1jo9POCxvGw-21uTlageyirfeKAcYA==&rm=sn-uxax4vopj5qx-q0n67d,sn-4g5eye7s&rrc=79,104&req_id=1a61f698c0efa3ee&rms=rdu,au&redirect_counter=2&cms_redirect=yes&cmsv=e&ipbypass=yes&met=1738837233,&mh=CD&mip=2603:6011:4800:7400:58c5:7b32:a400:b243&mm=29&mn=sn-vgqsrnz7&ms=rdu&mt=1738837010&mv=m&mvi=2&pl=34&lsparams=ipbypass,met,mh,mip,mm,mn,ms,mv,mvi,pl,rms&lsig=AGluJ3MwRQIhAMSBX-_SONw7dIRedBj1XNe8RCZnc814_rzvQXlD6RzHAiBQH5rnUem2-CNyPE87XYe0INx2tzHKiXw_qGX7XTvoYg%3D%3D'):setAutoPlay(false)
+menu0:setSource('http://docs.google.com/uc?export=open&id=1PH9x-cIfdWAVAwhNu5UZ3ot_qjpuc5SM'):setAutoPlay(false)
+menu1:setSource('http://docs.google.com/uc?export=open&id=1jmxdfUgmyaqPwPa8r5kRSvyodK-WXsi5'):setAutoPlay(false)
+menu2:setSource('http://docs.google.com/uc?export=open&id=1k30QEjvpcCHUwfwYAmWBk53q-U1NyMer'):setAutoPlay(false)
+menu3:setSource('http://docs.google.com/uc?export=open&id=1fmkhiTqETSKN1HwZUQ-aSJhy16IXw3g9'):setAutoPlay(false)
+menu4:setSource('http://docs.google.com/uc?export=open&id=1LIwvs6XHvIUgkU8BZ0Kfk5F_82BZI_BC'):setAutoPlay(false)
+menugtauto:setSource('http://docs.google.com/uc?export=open&id=1-B7imrBnQkEkMo6SFJSESCZ88_jviiUl'):setAutoPlay(false)
 
 local cartemp = {0, 0, 0}
 local cartempgoal = {0, 0, 0}
@@ -742,6 +742,17 @@ local justwon = false
 function script.update(dt)
 
     ac.storageSetPath('acs_x86', nil)
+
+    deathSound0:setSource('http://docs.google.com/uc?export=open&id=1XoeTUqU6TDgo0zk7Xo3ai-oliXvXwhlk'):setAutoPlay(false)
+    deathSound1:setSource('http://docs.google.com/uc?export=open&id=1hArZQuTvT1FqEEovr31eNnJm1Swk4_Ce'):setAutoPlay(false)
+    deathSound2:setSource('http://docs.google.com/uc?export=open&id=1nB3-hoj4q7vvVxyM4Sse2M4kZmNWL-8X'):setAutoPlay(false)
+
+    menu0:setSource('http://docs.google.com/uc?export=open&id=1PH9x-cIfdWAVAwhNu5UZ3ot_qjpuc5SM'):setAutoPlay(false)
+    menu1:setSource('http://docs.google.com/uc?export=open&id=1jmxdfUgmyaqPwPa8r5kRSvyodK-WXsi5'):setAutoPlay(false)
+    menu2:setSource('http://docs.google.com/uc?export=open&id=1k30QEjvpcCHUwfwYAmWBk53q-U1NyMer'):setAutoPlay(false)
+    menu3:setSource('http://docs.google.com/uc?export=open&id=1fmkhiTqETSKN1HwZUQ-aSJhy16IXw3g9'):setAutoPlay(false)
+    menu4:setSource('http://docs.google.com/uc?export=open&id=1LIwvs6XHvIUgkU8BZ0Kfk5F_82BZI_BC'):setAutoPlay(false)
+    menugtauto:setSource('http://docs.google.com/uc?export=open&id=1-B7imrBnQkEkMo6SFJSESCZ88_jviiUl'):setAutoPlay(false)
 
 	if loadCheck then
 
@@ -1704,7 +1715,7 @@ local oilSnapped = false
 local oilPouring = false
 local oilDraining = false
 
-local menuState = 21
+local menuState = 1
 local menuMusicsSelector = math.randomseed(sim.timeSeconds)
 local transferPersonType = 0
 local justtransfered = false
@@ -2256,6 +2267,49 @@ function script.drawUI()
                     ui.setCursorY(215)
                     ui.textColored('Enables UI temperature gauge on screen.', rgbm(0.8,0,1,1))
 
+                    ui.setCursorX(0)
+                    ui.setCursorY(400)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(76 + 2)
+                    ui.setCursorY(515 + 2)
+                    ui.textColored('MUSIC VOL.', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(76 + 1)
+                    ui.setCursorY(515 + 1)
+                    ui.textColored('MUSIC VOL.', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(76)
+                    ui.setCursorY(515)
+                    ui.textColored('MUSIC VOL.', rgbm(0.8,0,1,1))
+
+
+                    ui.setCursorX(45)
+                    ui.setCursorY(510)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(300,300))
+
+                    ui.setCursorX(30)
+                    ui.setCursorY(485)
+
+                    if ui.invisibleButton('        ', vec2(340,210)) then
+                        
+                    end
+
+
+                    ui.setCursorX(400)
+                    ui.setCursorY(440)
+
+                    ui.image('https://i.postimg.cc/T2LsTgTN/UI-PANELS-PURPLE.png',vec2(500,300))
+
+                    ui.pushFont(ui.Font.Title)
+                    ui.setCursorX(485)
+                    ui.setCursorY(515)
+                    ui.textColored('Adjusts the main menu music.', rgbm(0.8,0,1,1))
 
                     --- BACK ---
 
