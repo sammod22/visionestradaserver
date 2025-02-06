@@ -1,5 +1,27 @@
 ac.storageSetPath('acs_x86', nil)
 
+local deathPlayerChance = math.randomseed(sim.timeSeconds)
+local deathSound0 = ui.MediaPlayer()
+local deathSound1 = ui.MediaPlayer()
+local deathSound2 = ui.MediaPlayer()
+deathSound0:setSource('deathSound0.mp3'):setAutoPlay(false)
+deathSound1:setSource('deathSound1.mp3'):setAutoPlay(false)
+deathSound2:setSource('deathSound2.mp3'):setAutoPlay(false)
+
+local menu0 = ui.MediaPlayer()
+local menu1 = ui.MediaPlayer()
+local menu2 = ui.MediaPlayer()
+local menu3 = ui.MediaPlayer()
+local menu4 = ui.MediaPlayer()
+local menugtauto = ui.MediaPlayer()
+
+menu0:setSource('menu0.mp3'):setAutoPlay(false)
+menu1:setSource('menu1.mp3'):setAutoPlay(false)
+menu2:setSource('menu2.mp3'):setAutoPlay(false)
+menu3:setSource('menu3.mp3'):setAutoPlay(false)
+menu4:setSource('menu4.mp3'):setAutoPlay(false)
+menugtauto:setSource('menugtauto.mp3'):setAutoPlay(false)
+
 local cartemp = {0, 0, 0}
 local cartempgoal = {0, 0, 0}
 local carhardfactor = {0, 0, 0}
@@ -13,6 +35,8 @@ local coolingScore = engineFile:get("COOLING","COOLING_SCORE",0)
 local carFile = ac.INIConfig.carData(0, "car.ini")
 local hasRollcage = 0
 local safetyRating = 0
+local deathDetectorTimer = os.clock()
+local deathDetectorSpeed = 0
 
 local counter = 0
 local waterAdjuster = 0
@@ -21,6 +45,7 @@ local gforces = 0
 local blown = 0
 
 local died = 0
+local diedTime = os.clock()
 local mortal = true
 local money = 30000
 local moneyTransfer = 0
@@ -177,15 +202,31 @@ local tireArray = {
 {'Bridgestone Potenza RE050A RFT', 9, '205/45/R17', 1050, '215/40/R18', 1500, '245/35/R18', 1200, '225/35/R19', 1500, '245/40/R19', 1700, '255/30/R19', 1550, '275/35/R19', 1800, '245/35/R20', 1350, '275/30/R20', 1750},
 {'Bridgestone Potenza S001', 13, '205/45/R17', 850, '225/35/R18', 750, '225/40/R18', 650, '245/35/R18', 600, '245/40/R18', 950, '245/35/R19', 1200, '255/35/R19', 900, '215/45/R20', 1700, '245/40/R20', 1450, '245/40/ZR20', 1350, '255/35/R20', 1650, '275/30/R20', 1550, '295/35/ZR20', 2000},
 
+-- DUNLOP --
+
+{'Dunlop SP Sport Maxx GT600 DSST CTT NR1', 2, '255/40/ZRF20', 2050, '285/35/ZRF20', 2250},
+
 -- MICHELIN --
 
 {'Michelin Primacy HP', 1, '245/40/R17', 1000},
 {'Michelin Pilot Sport 2', 18, '205/55/R17', 1200, '225/45/ZR17', 1050, '235/50/ZR17', 1250, '255/40/ZR17', 1500, '225/40/ZR18', 1100, '235/40/ZR18', 1050, '265/35/ZR18', 1450, '265/40/ZR18', 1550, '285/30/ZR18', 2050, '295/30/ZR18', 1950, '295/35/ZR18', 2300, '235/35/ZR19', 1450, '255/40/ZR19', 1600, '265/35/ZR19', 1700, '295/30/ZR19', 1950, '305/30/ZR19', 2100, '275/45/ZR20', 2050},
 {'Michelin Pilot Sport 4', 28, '205/55/ZR16', 750, '205/40/ZR18', 1000, '215/40/R18', 1050, '225/40/ZR18', 800, '235/40/ZR18', 950, '235/45/ZR18', 1000, '245/40/ZR18', 950, '225/40/ZR19', 1100, '225/55/R19', 1100, '235/45/ZR19', 1150, '245/40/R19', 1250, '245/45/ZR19', 1350, '245/45/R19', 1300, '255/35/ZR19', 1150, '255/40/R19', 1350, '255/45/R19', 1350, '265/45/ZR19', 1500, '275/40/ZR19', 1550, '275/45/R19', 1600, '295/40/ZR19', 1550, '245/45/R20', 1350, '255/40/R20', 1600, '275/40/ZR20', 1500, '285/40/R20', 1700, '315/35/ZR20', 2500, '275/35/ZR21', 2100, '315/30/ZR21', 2500, '325/30/ZR21', 2200},
+{'Michelin Pilot Super Sport', 39, '225/40/ZR18', 900, '225/45/ZR18', 1150, '245/35/ZR18', 1100, '245/40/ZR18', 1000, '255/40/ZR18', 1100, '265/40/ZR18', 1400, '275/40/ZR18', 1350, '285/35/ZR18', 1550, '295/35/ZR18', 1800, '245/35/ZR19', 1250, '255/35/ZR19', 1250, '255/45/ZR19', 1450, '265/35/ZR19', 1550, '265/40/ZR19', 1500, '275/35/ZR19', 1500, '285/30/ZR19', 1750, '285/40/ZR19', 1800, '295/35/ZR19', 1650, '305/35/ZR19', 1750, '245/35/ZR20', 1800, '245/35/R20', 1700, '245/40/ZR20', 1500, '255/40/ZR20', 1350, '265/30/ZR20', 1500, '265/35/ZR20', 1700, '275/30/R20', 1800, '275/35/ZR20', 1550, '285/30/ZR20', 1700, '295/30/ZR20', 1650, '295/35/ZR20', 1850, '305/30/ZR20', 2050, '315/35/ZR20', 2250, '335/30/ZR20', 2150, '245/35/ZR21', 1700, '285/35/ZR21', 1850, '325/30/ZR21', 2000, '275/35/ZR22', 2150, '305/30/ZR22', 2300, '305/35/ZR22', 2500},
+{'Michelin Pilot Super Sport ZP', 9, '245/40/ZR18', 1300, '245/35/ZR19', 1450, '285/30/ZR19', 1900, '285/35/ZR19', 1650, '285/30/ZR20', 1800, '335/25/ZR20', 2350, '245/35/ZR21', 1900, '245/40/RF21', 2100, '275/35/RF21', 2150},
 
-{'Michelin Pilot Super Sport', 1, '', 0}
+-- PIRELLI --
 
+{'Pirelli P Zero', 96, '205/45/ZR17', 850, '205/40/ZR18', 1050, '225/40/ZR18', 750, '235/40/ZR18', 850, '235/50/ZR18', 1050, '245/35/ZR18', 950, '245/40/R18', 1050, '245/50/ZR18', 1300, '255/40/R18', 1250, '265/35/R18', 1100, '275/45/ZR18', 1500, '285/35/R18', 1200, '225/35/R19', 1200, '235/35/ZR19', 1300, '235/55/R19', 1150, '245/35/ZR19', 1450, '245/40/ZR19', 1250, '245/45/R19', 1250, '245/45/ZR19', 1400, '255/30/ZR19', 1150, '255/35/R19', 1150, '255/35/ZR19', 1450, '255/40/R19', 1350, '255/40/ZR19', 1200, '255/45/ZR19', 1550, '255/45/R19', 1450, '255/50/R19', 1400, '255/55/R19', 1150, '265/35/ZR19', 1650, '265/50/R19', 1550, '275/30/R19', 1300, '275/40/ZR19', 1600, '285/30/ZR19', 1750, '285/35/ZR19', 1500, '285/40/ZR19', 1900, '295/30/ZR19', 2000, '295/45/R19', 1800, '305/30/ZR19', 1900, '235/35/ZR20', 1400, '235/35/R20', 1450, '235/45/R20', 1250, 
+'245/30/ZR20', 1850, '245/35/ZR20', 1650, '245/40/R20', 1500, '245/45/ZR20', 1300, '255/30/ZR20', 1650, '255/35/ZR20', 1250, '255/40/R20', 1450, '255/40/ZR20', 1450, '255/50/R20', 1150, '265/30/R20', 1850, '265/35/R20', 1500, '265/35/ZR20', 1700, '265/45/R20', 1700, '265/45/ZR20', 1600, '275/30/ZR20', 1750, '275/35/ZR20', 1650, '275/40/ZR20', 1350, '275/45/ZR20', 1650, '285/30/ZR20', 1700, '285/35/ZR20', 1950, '285/40/R20', 1950, '295/30/ZR20', 1750, '295/35/ZR20', 2100, '295/40/R20', 1650, '305/30/ZR20', 2200, '305/35/ZR20', 1050, '305/40/ZR20', 2300, '315/35/ZR20', 2300, '325/35/R20', 2600, '335/30/ZR20', 1300, '345/25/ZR20', 3150,
+'255/30/ZR21', 1950, '255/40/R21', 1750, '265/40/ZR21', 1700, '265/40/R21', 1550, '265/45/R21', 1850, '275/30/ZR21', 2000, '275/35/ZR21', 2000, '285/30/ZR21', 2050, '285/40/ZR21', 2050, '285/45/ZR21', 2650, '295/35/ZR21', 1750, '295/35/R21', 1750, '295/40/ZR21', 1750, '315/35/ZR21', 2300, '325/25/ZR21', 2250, '355/25/ZR21', 2450, '265/40/R22', 1750, '275/40/R22', 1950, '285/35/ZR22', 2100, '285/40/ZR22', 2950, '285/40/R22', 2100, '315/30/ZR22', 2800, '325/35/R22', 2200, '335/25/ZR22', 2900},
 
+-- VALINO --
+
+{'Valino Greeva 08D', 8, '205/50/R15', 650, '215/40/R17', 700, '215/45/R17', 700, '235/40/R17', 700, '215/35/R18', 750, '235/40/R18', 800, '255/35/R18', 900, '265/35/R18', 950},
+
+-- YOKOHAMA --
+
+{'Yokohama Advan Neova AD07 LTS', 2, '175/55/R16', 750, '225/45/R17', 1000}
 
 }
 
@@ -552,70 +593,72 @@ function Testing()
         tableCount = tableCount + 1
     end
 
-    for i, pos in ipairs(usedMarketExpires) do
-        if tonumber(usedMarketExpires[i]) < tonumber(sim.systemTime) and pressedNext == false and confirmCarPurchase == false and checkListingsTimer then
-            local carArrayBuildertemp = {}
-            
-            
+    if pressedNext == false then
+        for i, pos in ipairs(usedMarketExpires) do
+            if tonumber(usedMarketExpires[i]) < tonumber(sim.systemTime) and confirmCarPurchase == false and checkListingsTimer then
+                local carArrayBuildertemp = {}
+                
+                
 
-            carRarityTempArray = {}
-            carSkinRarityTempArray = {}
+                carRarityTempArray = {}
+                carSkinRarityTempArray = {}
 
-            for i=1, #carArray do
-                carRarityRepeatArray = carArray[i][5]
-                carRarityAddon = #carRarityTempArray
-                for j=1, carRarityRepeatArray do
-                    carRarityTempArray[j + carRarityAddon] = i
+                for i=1, #carArray do
+                    carRarityRepeatArray = carArray[i][5]
+                    carRarityAddon = #carRarityTempArray
+                    for j=1, carRarityRepeatArray do
+                        carRarityTempArray[j + carRarityAddon] = i
+                    end
                 end
-            end
 
-            carRaritySelectorRandom = math.random(1, #carRarityTempArray)
-            carRaritySelector = carRarityTempArray[carRaritySelectorRandom]
-            carTimeSelector = carRaritySelector
-            carPriceSelector = math.random(carArray[carTimeSelector] [3], carArray[carTimeSelector] [4])
+                carRaritySelectorRandom = math.random(1, #carRarityTempArray)
+                carRaritySelector = carRarityTempArray[carRaritySelectorRandom]
+                carTimeSelector = carRaritySelector
+                carPriceSelector = math.random(carArray[carTimeSelector] [3], carArray[carTimeSelector] [4])
 
-            for l=1, carArray[carTimeSelector] [6] do
-                carSkinRarityAddon = #carSkinRarityTempArray
-                if type(carArray[carTimeSelector] [6 + (l * 2)]) == "number" then
-                    for m=1, carArray[carTimeSelector] [6 + (l * 2)] do
-                        if l < carArray[carTimeSelector] [6] + 1 then
-                            carSkinRarityTempArray[m + carSkinRarityAddon] = l
+                for l=1, carArray[carTimeSelector] [6] do
+                    carSkinRarityAddon = #carSkinRarityTempArray
+                    if type(carArray[carTimeSelector] [6 + (l * 2)]) == "number" then
+                        for m=1, carArray[carTimeSelector] [6 + (l * 2)] do
+                            if l < carArray[carTimeSelector] [6] + 1 then
+                                carSkinRarityTempArray[m + carSkinRarityAddon] = l
+                            end
                         end
                     end
                 end
-            end
+                
+
+                carSkinRaritySelectorRandom = math.random(1, #carSkinRarityTempArray)
+                carSkinRaritySelector = carSkinRarityTempArray[carSkinRaritySelectorRandom]
+
+                pressedNext = false
+                carArrayTimer = os.clock()
+
+                if carTimeSelector ~= nil and carArray[carTimeSelector] ~= nil then
+                    ac.debug('CAR NAME', carArray[carTimeSelector] [1])
+                    carArrayBuilder[0] = carArray[carTimeSelector] [1]
+                    ac.debug('CAR TRANSMISSION', carArray[carTimeSelector] [2])
+                    carArrayBuilder[1] = carArray[carTimeSelector] [2]
+                    ac.debug('CAR PAINT', carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5])
+                    carArrayBuilder[2] = carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5]
+                    ac.debug('CAR PRICE', carPriceSelector)
+                    carArrayBuilder[3] = tostring(carPriceSelector)
             
+                    
+                    --usedMarketExpires[table.count(usedMarketExpires)] = carPriceSelector
+                    
+                    
+                    --ac.debug('car array maker', carRarityTempArray)
+                    --ac.debug('car skin array maker', carSkinRarityTempArray)
+                end
 
-            carSkinRaritySelectorRandom = math.random(1, #carSkinRarityTempArray)
-            carSkinRaritySelector = carSkinRarityTempArray[carSkinRaritySelectorRandom]
-
-            pressedNext = false
-            carArrayTimer = os.clock()
-
-            if carTimeSelector ~= nil and carArray[carTimeSelector] ~= nil then
-                ac.debug('CAR NAME', carArray[carTimeSelector] [1])
-                carArrayBuilder[0] = carArray[carTimeSelector] [1]
-                ac.debug('CAR TRANSMISSION', carArray[carTimeSelector] [2])
-                carArrayBuilder[1] = carArray[carTimeSelector] [2]
-                ac.debug('CAR PAINT', carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5])
-                carArrayBuilder[2] = carArray[carTimeSelector] [(carSkinRaritySelector * 2) + 5]
-                ac.debug('CAR PRICE', carPriceSelector)
-                carArrayBuilder[3] = tostring(carPriceSelector)
-        
                 
-                --usedMarketExpires[table.count(usedMarketExpires)] = carPriceSelector
-                
-                
-                --ac.debug('car array maker', carRarityTempArray)
-                --ac.debug('car skin array maker', carSkinRarityTempArray)
+                carTimerSelectorRandom = math.random(30,604800)
+                usedMarket[i] = carArrayBuilder
+                usedMarketExpires[i] = tostring(carTimerSelectorRandom + tonumber(sim.systemTime))
             end
 
-            
-            carTimerSelectorRandom = math.random(30,604800)
-            usedMarket[i] = carArrayBuilder
-            usedMarketExpires[i] = tostring(carTimerSelectorRandom + tonumber(sim.systemTime))
         end
-
     end
 
     if not checkListingsTimer and checkListingsClock + 0.01 < os.clock() then
@@ -946,8 +989,16 @@ function script.update(dt)
         ac.debug('hardfactor temp goal car', cartempgoal[1])
         ac.debug('hardfactor car', carhardfactor[1])
 
-        if math.abs(car1.acceleration.x) + math.abs(car1.acceleration.y) + math.abs(car1.acceleration.z) > 10 * safetyRating and car.speedKmh > 50 + (safetyRating * 20) + (hasRollcage * 100) then
-            ac.sendChatMessage(' has died. This is a really long message to catch everyones attention. If you want to dispute this please contact Sam with the replay to show you did not die and stuff and stuff')
+        if deathDetectorTimer + 0.1 < os.clock() then
+            deathDetectorTimer = os.clock()
+            deathDetectorSpeed = car.speedKmh
+        end
+
+        if math.abs(car1.acceleration.x) + math.abs(car1.acceleration.y) + math.abs(car1.acceleration.z) > 10 * safetyRating and deathDetectorSpeed > 50 + (safetyRating * 20) + (hasRollcage * 100) then
+            deathPlayerChance = math.random(0,2)
+            ac.sendChatMessage(' has died from crash impact.')
+            diedTime = os.clock()
+            died = 1
         end
 
         if gforces < math.abs(car1.acceleration.x) + math.abs(car1.acceleration.y) + math.abs(car1.acceleration.z) then
@@ -1653,7 +1704,8 @@ local oilSnapped = false
 local oilPouring = false
 local oilDraining = false
 
-local menuState = 15
+local menuState = 21
+local menuMusicsSelector = math.randomseed(sim.timeSeconds)
 local transferPersonType = 0
 local justtransfered = false
 local usedMarketScroll = 0
@@ -1662,6 +1714,18 @@ local garageCarCycle = 0
 local displayGarageCars = true
 local displayGarageCarsTimer = os.clock()
 local sellCarCheck = false
+
+local rollCageCount = 0
+local brakeKitCount = 0
+local engineIntakeCount = 0
+local engineFuelSystemCount = 0
+local engineOverhaulCount = 0
+local drivetrainDiffCount = 0
+local driverainClutchCount = 0
+local turboTurboCount = 0
+local suspSwaybarCount = 0
+local suspCoiloverCount = 0
+local otherABSCount = 0
 
 local carArrayX = {}
 local carArrayZ = {}
@@ -1679,6 +1743,7 @@ function script.drawUI()
 
     if ac.isKeyDown(121) and not mainMenuToggle then
         mainMenu = mainMenu + 1
+        menuMusicsSelector = math.random(0,4)
         mainMenuToggle = true
     end
 
@@ -1686,12 +1751,45 @@ function script.drawUI()
         mainMenuToggle = false
     end
 
+    if mainMenu == 1 then
+        menu0:pause():setCurrentTime(0)
+        menu1:pause():setCurrentTime(0)
+        menu2:pause():setCurrentTime(0)
+        menu3:pause():setCurrentTime(0)
+        menu4:pause():setCurrentTime(0)
+        menugtauto:pause():setCurrentTime(0)
+    end
+
+    if mainMenu == 0 and menuState == 13 then
+        menugtauto:play()
+    else
+        menugtauto:pause():setCurrentTime(0)
+    end
 
     if mainMenu == 0 then
 
         if car.speedKmh < 5 then
             --physics.setCarNoInput(true)
         end
+
+        if menuMusicsSelector == 0 and menuState ~= 13 then
+            menu0:play()
+        elseif menuMusicsSelector == 1 and menuState ~= 13 then
+            menu1:play()
+        elseif menuMusicsSelector == 2 and menuState ~= 13 then
+            menu2:play()
+        elseif menuMusicsSelector == 3 and menuState ~= 13 then
+            menu3:play()
+        elseif menuMusicsSelector == 4 and menuState ~= 13 then
+            menu4:play()
+        else
+            menu0:pause():setCurrentTime(0)
+            menu1:pause():setCurrentTime(0)
+            menu2:pause():setCurrentTime(0)
+            menu3:pause():setCurrentTime(0)
+            menu4:pause():setCurrentTime(0)
+        end
+
 
         if  menuState == 0 then
         
@@ -2293,25 +2391,25 @@ function script.drawUI()
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(142 + 2)
+                    ui.setCursorX(52 + 2)
                     ui.setCursorY(215 + 2)
-                    ui.textColored('TOW', rgbm(0.1,0.8,1,0.7))
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(142 + 1)
+                    ui.setCursorX(52 + 1)
                     ui.setCursorY(215 + 1)
-                    ui.textColored('TOW', rgbm(0.8,0,1,1))
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(142)
+                    ui.setCursorX(52)
                     ui.setCursorY(215)
-                    ui.textColored('TOW', rgbm(0.8,0,1,1))
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
 
                     ui.setCursorX(30)
                     ui.setCursorY(185)
 
-                    if ui.invisibleButton('towservice', vec2(340,210)) then
-                        calledMechanic = true
+                    if ui.invisibleButton('tuningShop', vec2(340,210)) then
+                        menuState = 20
                     end
 
                     ui.setCursorX(400)
@@ -2322,13 +2420,14 @@ function script.drawUI()
                     ui.pushFont(ui.Font.Title)
                     ui.setCursorX(465)
                     ui.setCursorY(215)
-                    ui.textColored('Teleports you to the repair shop in case car is', rgbm(0.8,0,1,1))
+                    ui.textColored('Brings you to the tuning shop menu where', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Title)
                     ui.setCursorX(465)
                     ui.setCursorY(240)
-                    ui.textColored('damaged. Use this if you get stuck as well.', rgbm(0.8,0,1,1))
+                    ui.textColored('you can buy aftermarket parts.', rgbm(0.8,0,1,1))
 
+                    -- DEALERSHIP --
 
                     ui.setCursorX(0)
                     ui.setCursorY(350)
@@ -2336,25 +2435,25 @@ function script.drawUI()
                     ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(145 + 2)
+                    ui.setCursorX(75 + 2)
                     ui.setCursorY(465 + 2)
-                    ui.textColored('FUEL', rgbm(0.1,0.8,1,0.7))
+                    ui.textColored('DEALERSHIP', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(145 + 1)
+                    ui.setCursorX(75 + 1)
                     ui.setCursorY(465 + 1)
-                    ui.textColored('FUEL', rgbm(0.8,0,1,1))
+                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(145)
+                    ui.setCursorX(75)
                     ui.setCursorY(465)
-                    ui.textColored('FUEL', rgbm(0.8,0,1,1))
+                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
 
                     ui.setCursorX(30)
                     ui.setCursorY(435)
 
-                    if ui.invisibleButton('fuelservice', vec2(340,210)) then
-                        physics.setCarPosition(0, vec3(-4515.52, 34.75, -6014.95), ac.getCameraDirection())
+                    if ui.invisibleButton('dealershipservice', vec2(340,210)) then
+                        menuState = 12
                     end
 
                     ui.setCursorX(400)
@@ -2365,56 +2464,100 @@ function script.drawUI()
                     ui.pushFont(ui.Font.Title)
                     ui.setCursorX(465)
                     ui.setCursorY(465)
-                    ui.textColored('Teleports you to the fuel station in case car is', rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Title)
-                    ui.setCursorX(465)
-                    ui.setCursorY(490)
-                    ui.textColored('out of fuel.', rgbm(0.8,0,1,1))
-
-                    -- DEALERSHIP --
-
-                    ui.setCursorX(0)
-                    ui.setCursorY(600)
-
-                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(75 + 2)
-                    ui.setCursorY(715 + 2)
-                    ui.textColored('DEALERSHIP', rgbm(0.1,0.8,1,0.7))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(75 + 1)
-                    ui.setCursorY(715 + 1)
-                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
-
-                    ui.pushFont(ui.Font.Huge)
-                    ui.setCursorX(75)
-                    ui.setCursorY(715)
-                    ui.textColored('DEALERSHIP', rgbm(0.8,0,1,1))
-
-                    ui.setCursorX(30)
-                    ui.setCursorY(685)
-
-                    if ui.invisibleButton('dealershipservice', vec2(340,210)) then
-                        menuState = 12
-                    end
-
-                    ui.setCursorX(400)
-                    ui.setCursorY(640)
-
-                    ui.image('https://i.postimg.cc/T2LsTgTN/UI-PANELS-PURPLE.png',vec2(500,300))
-
-                    ui.pushFont(ui.Font.Title)
-                    ui.setCursorX(465)
-                    ui.setCursorY(715)
                     ui.textColored('Brings you to the car dealership menu where', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Title)
                     ui.setCursorX(465)
-                    ui.setCursorY(740)
+                    ui.setCursorY(490)
                     ui.textColored('you can buy cars.', rgbm(0.8,0,1,1))
+
+                    -- TOW --
+
+                    ui.setCursorX(1000)
+                    ui.setCursorY(100)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1142 + 2)
+                    ui.setCursorY(215 + 2)
+                    ui.textColored('TOW', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1142 + 1)
+                    ui.setCursorY(215 + 1)
+                    ui.textColored('TOW', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1142)
+                    ui.setCursorY(215)
+                    ui.textColored('TOW', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1030)
+                    ui.setCursorY(185)
+
+                    if ui.invisibleButton('towservice', vec2(340,210)) then
+                        calledMechanic = true
+                    end
+
+                    ui.setCursorX(1400)
+                    ui.setCursorY(140)
+
+                    ui.image('https://i.postimg.cc/T2LsTgTN/UI-PANELS-PURPLE.png',vec2(500,300))
+
+                    ui.pushFont(ui.Font.Title)
+                    ui.setCursorX(1465)
+                    ui.setCursorY(215)
+                    ui.textColored('Teleports you to the repair shop in case car is', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Title)
+                    ui.setCursorX(1465)
+                    ui.setCursorY(240)
+                    ui.textColored('damaged. Use this if you get stuck as well.', rgbm(0.8,0,1,1))
+
+
+                    ui.setCursorX(1000)
+                    ui.setCursorY(350)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1145 + 2)
+                    ui.setCursorY(465 + 2)
+                    ui.textColored('FUEL', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1145 + 1)
+                    ui.setCursorY(465 + 1)
+                    ui.textColored('FUEL', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1145)
+                    ui.setCursorY(465)
+                    ui.textColored('FUEL', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1030)
+                    ui.setCursorY(435)
+
+                    if ui.invisibleButton('fuelservice', vec2(340,210)) then
+                        physics.setCarPosition(0, vec3(-4515.52, 34.75, -6014.95), ac.getCameraDirection())
+                    end
+
+                    ui.setCursorX(1400)
+                    ui.setCursorY(390)
+
+                    ui.image('https://i.postimg.cc/T2LsTgTN/UI-PANELS-PURPLE.png',vec2(500,300))
+
+                    ui.pushFont(ui.Font.Title)
+                    ui.setCursorX(1465)
+                    ui.setCursorY(465)
+                    ui.textColored('Teleports you to the fuel station in case car is', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Title)
+                    ui.setCursorX(1465)
+                    ui.setCursorY(490)
+                    ui.textColored('out of fuel.', rgbm(0.8,0,1,1))
+
 
                     --- BACK ---
 
@@ -4153,6 +4296,482 @@ function script.drawUI()
 
             end)
 
+        elseif menuState == 20 then
+
+            ui.toolWindow('TUNING SHOP', vec2(0, 0), vec2(1920,1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('TuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258)
+                    ui.setCursorY(29)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.drawLine(vec2(120,304), vec2(280,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,304), vec2(680,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(920,304), vec2(1080,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(1320,304), vec2(1480,304), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.drawLine(vec2(120,554), vec2(280,554), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,554), vec2(680,554), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(920,554), vec2(1080,554), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(1320,554), vec2(1480,554), rgbm(0.1,0.1,0.1,1), 140)
+
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(200)
+
+                    ui.image('https://i.postimg.cc/kgfkQvGv/ICONS-BODY.png',vec2(200, 200))
+
+                    ui.setCursorX(500)
+                    ui.setCursorY(203)
+
+                    ui.image('https://i.postimg.cc/905SmxgC/ICONS-BRAKES.png',vec2(200, 200))
+
+                    ui.setCursorX(903)
+                    ui.setCursorY(210)
+
+                    ui.image('https://i.postimg.cc/zBR61mjx/ICONS-ENGINE.png',vec2(200, 200))
+
+                    ui.setCursorX(1336)
+                    ui.setCursorY(230)
+
+                    ui.image('https://i.postimg.cc/0NjhcKJR/ICONS-DRIVETRAIN.png',vec2(130, 150))
+
+                    ui.setCursorX(127)
+                    ui.setCursorY(482)
+
+                    ui.image('https://i.postimg.cc/VLwT2VbF/ICONS-TURBO.png',vec2(150, 150))
+
+                    ui.setCursorX(541)
+                    ui.setCursorY(497)
+
+                    ui.image('https://i.postimg.cc/QCQzHpv5/ICONS-SUSPENSION.png',vec2(120, 120))
+
+                    ui.setCursorX(940)
+                    ui.setCursorY(499)
+
+                    ui.image('https://i.postimg.cc/BZHkY0t6/ICONS-TIRES.png',vec2(120, 120))
+
+                    ui.setCursorX(1322)
+                    ui.setCursorY(470)
+
+                    ui.image('https://i.postimg.cc/vHWFcGjC/ICONS-OTHER.png',vec2(160, 160))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Body', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Brakes', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+                    
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(840)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Engine', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1240)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Drivetrain', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(497)
+                    ui.dwriteTextAligned('Turbo', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(497)
+                    ui.dwriteTextAligned('Suspension', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+                    
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(840)
+                    ui.setCursorY(497)
+                    ui.dwriteTextAligned('Tyres', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1240)
+                    ui.setCursorY(497)
+                    ui.dwriteTextAligned('Other', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+
+                    ui.drawLine(vec2(120,854), vec2(1380,854), rgbm(0.21,0.21,0.21,1), 190)
+
+                    if carCollectionAmount > 0 then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('SELECTED CAR TO PUT PARTS ON', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,0.9))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(220)
+                        ui.dwriteTextAligned(carCollection[garageCarCycle][0], 32, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(1,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(475)
+                        ui.setCursorY(265)
+                        ui.dwriteTextAligned(carCollection[garageCarCycle][2], 23, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(475)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned(carCollection[garageCarCycle][1], 23, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(120)
+                        ui.setCursorY(870)
+
+                        if ui.button('PREV.', vec2(180,80)) then
+                            if garageCarCycle == 0 then
+                                garageCarCycle = carCollectionAmount - 1
+                            else
+                                garageCarCycle = garageCarCycle - 1
+                            end
+                        end
+
+                        ui.setCursorX(1200)
+                        ui.setCursorY(870)
+
+                        if ui.button('NEXT', vec2(180,80)) then
+                            if garageCarCycle < carCollectionAmount - 1 then
+                                garageCarCycle = garageCarCycle + 1
+                            else
+                                garageCarCycle = 0
+                            end
+                        end
+
+                        
+
+                    else
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(225)
+                        ui.dwriteTextAligned('PURCHASE CAR FIRST BEFORE USING TUNING SHOP', 45, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,1))
+                    end
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(235)
+
+                    if ui.button(' ', vec2(160,140)) then
+                        menuState = 21
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(235)
+
+                    if ui.button('  ', vec2(160,140)) then
+                        menuState = 22
+                    end
+
+                    ui.setCursorX(920)
+                    ui.setCursorY(235)
+
+                    if ui.button('   ', vec2(160,140)) then
+                        menuState = 23
+                    end
+
+                    ui.setCursorX(1320)
+                    ui.setCursorY(235)
+
+                    if ui.button('    ', vec2(160,140)) then
+                        menuState = 24
+                    end
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(485)
+
+                    if ui.button('     ', vec2(160,140)) then
+                        menuState = 25
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(485)
+
+                    if ui.button('      ', vec2(160,140)) then
+                        menuState = 26
+                    end
+
+                    ui.setCursorX(920)
+                    ui.setCursorY(485)
+
+                    if ui.button('       ', vec2(160,140)) then
+                        menuState = 27
+                    end
+
+                    ui.setCursorX(1320)
+                    ui.setCursorY(485)
+
+                    if ui.button('        ', vec2(160,140)) then
+                        menuState = 28
+                    end
+
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 2
+                    end
+
+
+                end)
+
+
+            end)
+
+
+        elseif menuState == 21 then
+
+            ui.toolWindow('BODY TUNING SHOP', vec2(0, 0), vec2(1920,1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('BodyTuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258)
+                    ui.setCursorY(29)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(90)
+                    ui.setCursorY(90)
+                    ui.dwriteTextAligned('Roll Cage', 35, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    
+                    if ui.button('next ', vec2(90,50)) then
+                        if rollCageCount ~= 2 then
+                            rollCageCount = rollCageCount + 1
+                        else
+                            rollCageCount = 0
+                        end
+                    end
+                    
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        menuState = 20
+                    end
+
+
+                end)
+
+
+            end)
+
 
         end
     else
@@ -4204,7 +4823,6 @@ function script.drawUI()
 
 
         end)
-
 
     end
 
@@ -4344,6 +4962,67 @@ function script.drawUI()
             ui.textAligned('Toll booth skipped, penalty for 30 seconds...', 0.25, vec2(1920,0))
 
         end)
+    end
+
+    if died == 1 then
+        
+        physics.setGentleStop(0, true)
+        
+        mainMenu = 1
+        ui.transparentWindow('DIED', vec2(-20, -20), ui.windowSize() + vec2(20,20), function ()
+
+            ui.pushFont(ui.Font.Huge)
+            ui.childWindow('died', ui.windowSize() + vec2(20,20), false, ui.WindowFlags.None, function ()
+
+
+                ui.setCursorX(0)
+                ui.setCursorY(0)
+
+                ui.image('https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/b6c50ee6-a1c2-471d-8b18-31ad972d7149/dbn9k39-c83efb73-74a9-41ee-951f-0c1caf158373.png/v1/fill/w_960,h_540/blood_vignette_by_7he1ndigo_dbn9k39-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NTQwIiwicGF0aCI6IlwvZlwvYjZjNTBlZTYtYTFjMi00NzFkLThiMTgtMzFhZDk3MmQ3MTQ5XC9kYm45azM5LWM4M2VmYjczLTc0YTktNDFlZS05NTFmLTBjMWNhZjE1ODM3My5wbmciLCJ3aWR0aCI6Ijw9OTYwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.HuHva8oUTCbpfhV6_Q7dF87ZVngsUezGsZTSx3Mn5Ts',ui.windowSize() + vec2(20,20))
+
+                ui.drawRectFilled(vec2(-20, -20), ui.windowSize() + vec2(20,20), rgbm(0,0,0,(os.clock() * 1 - diedTime) - 10), 55)
+
+                ui.setCursorX(350)
+                ui.setCursorY(230)
+                ui.dwriteTextAligned('GAME OVER!', 150, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,0,0,(os.clock() * 1 - diedTime) - 10))
+        
+                if diedTime + 11 < os.clock() then
+                    ui.setCursor(ui.windowSize() / 2.45)
+                    if ui.button('    ', vec2(300,150)) then
+                        
+                    end
+            
+                    ui.setCursorX(350)
+                    ui.setCursorY(490)
+                    ui.dwriteTextAligned('RESET', 60, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,0,0,1))
+        
+                    ui.setCursorX(350)
+                    ui.setCursorY(620)
+                    ui.dwriteTextAligned('(you cannot respawn in mortal mode)', 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,0,0,1))
+        
+
+                end
+
+                
+
+            end)
+
+
+        end)
+
+        if diedTime + 1 > os.clock() then
+            if deathPlayerChance == 0 then
+                deathSound0:play()
+            elseif deathPlayerChance == 1 then
+                deathSound1:play()
+            elseif deathPlayerChance == 2 then
+                deathSound2:play()
+            end
+        end
+
+        
+
+
     end
 
 end
