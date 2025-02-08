@@ -623,7 +623,7 @@ function Testing()
 
     if pressedNext == false then
         for i, pos in ipairs(usedMarketExpires) do
-            if tonumber(usedMarketExpires[i]) < tonumber(sim.systemTime) and confirmCarPurchase == false and checkListingsTimer then
+            if tonumber(usedMarketExpires[i]) < tonumber(sim.systemTime) and confirmCarPurchase == false and checkListingsTimer and pressedNext == false then
                 local carArrayBuildertemp = {}
                 
                 
