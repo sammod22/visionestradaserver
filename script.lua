@@ -1035,7 +1035,7 @@ function script.update(dt)
             deathDetectorSpeed = car.speedKmh
         end
 
-        if math.abs(car1.acceleration.x) + math.abs(car1.acceleration.y) + math.abs(car1.acceleration.z) > 10 * safetyRating and deathDetectorSpeed > 50 + (safetyRating * 20) + (hasRollcage * 100) then
+        if math.abs(car1.acceleration.x) + math.abs(car1.acceleration.y) + math.abs(car1.acceleration.z) > 20 * safetyRating and deathDetectorSpeed > 50 + (safetyRating * 20) + (hasRollcage * 100) then
             deathPlayerChance = math.random(0,2)
             ac.sendChatMessage(' has died from crash impact.')
             diedTime = os.clock()
