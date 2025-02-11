@@ -891,7 +891,7 @@ function script.update(dt)
         if cartempgoal[1] > car1.waterTemperature and car1.waterTemperature > 75 and counter < 501 then
             counter = counter + (carhardfactor[1] * 0.02)
         elseif cartempgoal[1] - 5 < car1.waterTemperature and counter > 0 then
-            counter = counter - (carhardfactor[1] * 0.5)
+            counter = counter - (carhardfactor[1] * 0.15)
         end
 
         if car1.waterTemperature > 75 and car1.waterTemperature < 78 and counter < 500 then
@@ -1733,7 +1733,7 @@ local uiColor = rgbm(100, 100, 100, 100)
 
 --end
 
-local mainMenu = 0
+local mainMenu = 1
 local mainMenuToggle = 0
 local stickColor = rgbm(0.3,0.3,0.3,1)
 local stickColorGroove = rgbm(0.25,0.25,0.25,1)
@@ -1745,7 +1745,7 @@ local oilSnapped = false
 local oilPouring = false
 local oilDraining = false
 
-local menuState = 21
+local menuState = 0
 local menuMusicsSelector = math.randomseed(sim.timeSeconds)
 local transferPersonType = 0
 local justtransfered = false
