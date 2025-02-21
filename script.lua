@@ -119,6 +119,29 @@ function StorageUnpackCarCollectionNested(data,items) --same thing but with nest
     return storedVals
 end
 
+function StorageUnpackCarModificationsNested(data,cars,carsmodAmount) --same thing but with nested tables
+    local storedVals = {}
+    local k = 1 --just a simple iterator over the string
+    for i=1,cars do
+        storedVals [i] = {}
+        for j=1, tonumber(carsmodAmount[i]) do
+            storedVals[i][j] = string.split(data,'/')[k]
+            k = k+1
+        end
+    end
+    return storedVals
+end
+
+function StorageUnpackCarModificationsAmountNested(data,cars) --same thing but with nested tables
+    local storedVals = {}
+    local k = 1 --just a simple iterator over the string
+    for i=1,cars do
+        storedVals[i] = string.split(data,'/')[k]
+        k = k+1
+    end
+    return storedVals
+end
+
 function StoragePack(data) --prepairing string to store
     local storedString = ""
     for i=1, #data do
@@ -151,6 +174,30 @@ function StoragePackCarCollectionNested(data,items) --same thing but with nested
             if i*j ~= 200 then --eh, it works
                 storedString = storedString .. "/" 
             end
+        end
+    end
+    return storedString
+end
+
+function StoragePackCarModificationsNested(data,cars) --same thing but with nested tables
+    local storedString = ""
+    for i=1, cars do
+        for j=1, #data[i] do
+            storedString = storedString .. data[i][j]
+            if i*j ~= 200 then --eh, it works
+                storedString = storedString .. "/" 
+            end
+        end
+    end
+    return storedString
+end
+
+function StoragePackCarModificationsAmountNested(data,cars)
+    local storedString = ""
+    for i=1, cars do
+        storedString = storedString .. tostring(#data[i])
+        if i ~= #data then --eh, it works
+            storedString = storedString .. "/" 
         end
     end
     return storedString
@@ -190,6 +237,8 @@ local storedValues = ac.storage{
     carCollectionAmount = 0,
     carCollection = '',
     carCollectionState = '',
+    carModifications = '',
+    carModificationsAmount = '',
     musicVolume = 50
 }
 
@@ -204,6 +253,11 @@ local tireArray = {
 {'Bridgestone Potenza RE050A', 17, '205/45/R17', 400, '235/40/ZR18', 1150, '245/45/R18', 1150, '265/40/ZR18', 1500, '235/35/ZR19', 1300, '235/40/R19', 1350, '235/40/ZR19', 1300, '245/40/R19', 1300, '245/40/ZR19', 1350, '265/35/ZR19', 1650, '265/35/R19', 1450, '275/35/R19', 1500, '285/35/ZR19', 1650, '285/40/ZR19', 1700, '295/30/ZR19', 1550, '305/30/ZR19', 1800, '285/35/R20', 1750},
 {'Bridgestone Potenza RE050A RFT', 9, '205/45/R17', 1050, '215/40/R18', 1500, '245/35/R18', 1200, '225/35/R19', 1500, '245/40/R19', 1700, '255/30/R19', 1550, '275/35/R19', 1800, '245/35/R20', 1350, '275/30/R20', 1750},
 {'Bridgestone Potenza S001', 13, '205/45/R17', 850, '225/35/R18', 750, '225/40/R18', 650, '245/35/R18', 600, '245/40/R18', 950, '245/35/R19', 1200, '255/35/R19', 900, '215/45/R20', 1700, '245/40/R20', 1450, '245/40/ZR20', 1350, '255/35/R20', 1650, '275/30/R20', 1550, '295/35/ZR20', 2000},
+
+{'Bridgestone Potenza RE-01R', 21, '195/50/R15', 700, '205/45/R16', 750, '205/55/R16', 900, '225/50/R16', 900, '205/45/R17', 950, '215/45/R17', 1100, '225/45/R17', 1200, '235/40/R17', 1050, '235/45/R17', 1300, '245/40/R17', 1100, '245/45/R17', 1450, '255/40/R17', 1150, '225/40/R18', 1300, '235/40/R18', 1600, '245/40/R18', 1400, '245/45/R18', 1300, '255/35/R18', 1950, '255/45/R18', 1900, '265/35/R18', 1800, '245/35/R19', 1650, '275/30/R19', 1850},
+{'Bridgestone Potenza RE-71R', 44, '195/50/R15', 550, '205/50/R15', 600, '195/55/R16', 600, '205/45/R16', 650, '205/50/R16', 650, '205/55/R16', 700, '225/50/R16', 700, '205/45/R17', 750, '215/45/R17', 600, '225/45/R17', 700, '235/45/R17', 650, '245/40/R17', 800, '245/45/R17', 700, '255/40/R17', 850, '215/40/R18', 800, '215/45/R18', 800, '225/40/R18', 850, '225/45/R18', 950, '225/50/R18', 800, '235/40/R18', 1050, '235/45/R18', 800, '245/40/R18', 1000, '245/45/R18', 900, '255/35/R18', 1100, '255/40/R18', 950, '265/35/R18', 1250, '265/45/R18', 1150, '275/35/R18', 1250, '285/30/R18', 1350, '225/35/R19', 1100, '235/35/R19', 1200, '235/40/R19', 900, '245/35/R19', 1150, '245/40/R19', 1100, '255/35/R19', 1200, '265/35/R19', 1250, '265/40/R19', 1200, '275/35/R19', 1400, '285/35/R19', 1400, '305/30/R19', 1650, '245/35/R20', 1350, '255/40/R20', 1150, '285/35/R20', 1350, '295/30/R20', 1750},
+{'Bridgestone Potenza RE-71RS', 41, '205/50/R15', 800, '225/50/R15', 950, '195/50/R16', 950, '195/55/R16', 700, '205/45/R16', 1000, '205/50/R16', 950, '205/55/R16', 950, '215/45/R16', 1050, '225/50/R16', 800, '205/45/R17', 1050, '215/45/R17', 1050, '225/45/R17', 1100, '235/45/R17', 1100, '245/40/R17', 1100, '245/45/R17', 1100, '255/40/R17', 1150, '215/40/R18', 1200, '215/45/R18', 800, '225/40/R18', 1050, '225/45/R18', 1000, '225/50/R18', 1050, '235/40/R18', 1100, '245/40/R18', 1100, '245/45/R18', 1250, '255/35/R18', 1350, '255/40/R18', 1100, '265/35/R18', 1500, '275/35/R18', 1600, '285/30/R18', 1450, '295/30/R18', 1600, '295/35/R18', 1700, '235/35/R19', 1300, '235/40/R19', 1250, '245/35/R19', 1350, '245/40/R19', 1300, '255/35/R19', 1400, '265/35/R19', 1500, '275/35/R19', 1550, '285/35/R19', 1650, '305/30/R19', 1750, '285/35/R20', 1800},
+{'Bridgestone Potenza RE-11S', 15, '185/60/R14', 1150, '185/55/R15', 650, '195/50/R15', 650, '195/55/R15', 650, '205/50/R15', 1150, '205/60/R15', 1250, '225/50/R15', 1150, '225/45/R16', 1450, '225/50/R16', 1450, '215/45/R17', 1850, '225/45/R17', 1900, '235/45/R17', 1950, '245/40/R18', 2400, '265/35/R18', 2800, '295/35/R18', 3200},
 
 -- CONTINENTAL --
 
@@ -241,11 +295,11 @@ local tireArray = {
 
 -- YOKOHAMA --
 
-{'Yokohama Advan Apex V601', 0},
-{'Yokohama Advan Sport V105', 0},
-{'Yokohama Advan Sport V107', 0},
+{'Yokohama Advan Fleva V701', 7, '205/50/R15', 500, '195/55/R16', 550, '225/50/R17', 400, '215/45/R18', 800, '225/35/R18', 800, '265/30/R19', 950, '255/30/R20', 900},
+{'Yokohama Advan Sport V107', 7, '245/40/ZR18', 950, '235/40/ZR19', 1250, '235/35/ZR20', 1400, '245/35/ZR20', 1450, '255/50/R20', 1750, '295/30/ZR20', 800, '305/35/R23', 1800},
+{'Yokohama Advan Sport V105', 17, '195/50/R16', 1000, '225/45/R17', 1350, '235/40/ZR19', 1300, '245/40/ZR19', 1450, '265/40/ZR19', 1700, '275/35/ZR19', 1700, '275/40/ZR19', 2000, '285/40/ZR19', 2050, '295/35/ZR19', 1750, '255/30/ZR20', 1500, '255/40/ZR20', 1900, '275/30/ZR20', 900, '295/35/ZR20', 2150, '315/35/ZR20', 2650, '295/35/R21', 1950, '285/35/ZR22', 1650, '315/30/ZR22', 2100},
+{'Yokohama Advan Apex V601', 17, '225/45/R17', 650, '235/50/R18', 450, '255/35/R18', 850, '265/35/R18', 850, '275/35/R18', 950, '275/40/R18', 1050, '245/35/R19', 1000, '265/35/R19', 1100, '285/30/R19', 1150, '295/30/R19', 1150, '305/30/R19', 1250, '325/30/R19', 1300, '235/35/R20', 1100, '275/35/R20', 1300, '305/35/R20', 1650, '245/35/R21', 1150, '265/35/R21', 1300},
 
-{'Yokohama Advan Fleva V701', 0},
 {'Yokohama Advan Neova AD07 LTS', 2, '175/55/R16', 750, '225/45/R17', 1000},
 {'Yokohama Advan Neova AD08 R', 37, '205/50/R15', 750, '205/55/R16', 1050, '225/50/R16', 1150, '205/45/R17', 1200, '205/50/R17', 1050, '215/40/R17', 1000, '215/45/R17', 1250, '225/45/R17', 1300, '235/40/R17', 1400, '235/45/R17', 1400, '245/40/R17', 1450, '245/45/R17', 1450, '255/40/R17', 1250, '215/45/R18', 1450, '225/40/R18', 1350, '225/45/R18', 1300, '235/40/R18', 1650, '245/40/R18', 1350, '245/45/R18', 1700, '255/35/R18', 2000, '255/40/R18', 1900, '265/35/R18', 1850, '265/40/R18', 1400, '285/30/R18', 2150, '295/30/R18', 2250, '225/35/R19', 1800, '235/35/R19', 1800, '245/35/R19', 1750, '245/40/R19', 1700, '255/30/R19', 1950, '255/35/R19', 1800, '265/30/R19', 1450, '265/35/R19', 1800, '275/30/R19', 1900, '275/35/R19', 1850, '295/30/R19', 2100, '305/30/R19', 2100},
 {'Yokohama Advan Neova AD09', 48, '205/50/R15', 650, '205/45/R16', 700, '205/50/R16', 750, '205/55/R16', 850, '225/50/R16', 900, '205/45/R17', 800, '205/50/R17', 950, '215/40/R17', 1000, '215/45/R17', 950, '225/45/R17', 900, '225/50/R17', 1000, '235/45/R17', 900, '245/40/R17', 1050, '245/45/R17', 1100, '255/40/R17', 1150, '225/40/R18', 1050, '225/45/R18', 1150, '235/40/R18', 1150, '245/35/R18', 1250, '245/40/R18', 1150, '245/45/R18', 1350, '255/35/R18', 1500, '255/40/R18', 1200, '265/35/R18', 1400, '265/40/R18', 1500, '275/40/R18', 1500, '285/30/R18', 1650, '295/30/R18', 1650, '295/35/R18', 1750, '225/35/R19', 1150, '225/40/R19', 1150, '235/35/R19', 1300, '235/40/R19', 1050, '245/35/R19', 1400, '245/40/R19', 1200, '255/30/R19', 1300, '255/35/R19', 1450, '255/40/R19', 1400, '265/35/R19', 1450, '275/35/R19', 1600, '275/40/R19', 1600, '285/35/R19', 1650,
@@ -264,6 +318,8 @@ local usedMarketExpires = {}
 local carCollectionAmount = 0
 local carCollection = {}
 local carCollectionState = {}
+local carModifications = {}
+local carModificationsAmount = {}
 
 local fpsClock = os.clock()
 local initialLaunch = false
@@ -623,7 +679,9 @@ function Testing()
 
     if pressedNext == false then
         for i, pos in ipairs(usedMarketExpires) do
-            if tonumber(usedMarketExpires[i]) < tonumber(sim.systemTime) and confirmCarPurchase == false and checkListingsTimer and pressedNext == false then
+            carRarityTempArray = {}
+            carSkinRarityTempArray = {}
+            if tonumber(usedMarketExpires[i]) < tonumber(sim.systemTime) and carArrayTimer + 0.2 < os.clock() and confirmCarPurchase == false and checkListingsTimer and pressedNext == false then
                 local carArrayBuildertemp = {}
                 
                 
@@ -731,6 +789,10 @@ function LoadChecking()
         if storedValues.usedMarketExpires ~= nil then
             usedMarketExpires = StorageUnpack(storedValues.usedMarketExpires, 50, false)
         end
+        if storedValues.carModifications ~= "" then
+            carModificationsAmount = StorageUnpackCarModificationsAmountNested(storedValues.carModificationsAmount, carCollectionAmount)
+            carModifications = StorageUnpackCarModificationsNested(storedValues.carModifications, carCollectionAmount, carModificationsAmount)
+        end
         carCollection = StorageUnpackCarCollectionNested(storedValues.carCollection, storedValues.carCollectionAmount)
     end
 
@@ -805,8 +867,12 @@ function script.update(dt)
             storedValues.carCollectionAmount = carCollectionAmount
             if carCollectionAmount > 0 then
                 storedValues.carCollection = StoragePackCarCollectionNested(carCollection, carCollectionAmount)
+                storedValues.carModifications = StoragePackCarModificationsNested(carModifications, carCollectionAmount)
+                storedValues.carModificationsAmount = StoragePackCarModificationsAmountNested(carModifications, carCollectionAmount)
             else
                 storedValues.carCollection = ""
+                storedValues.carModifications = ""
+                storedValues.carModificationsAmount = ""
             end
             storedValues.tableCount = tableCount
             if enginedamageFirstLoad + 10 > os.clock() then
@@ -867,6 +933,8 @@ function script.update(dt)
 	physics.setWaterTemperature(1, car.waterTemperature - waterAdjuster)
 	physics.setWaterTemperature(2, car.waterTemperature - waterAdjuster)
 
+    ac.debug('car mod amount', carModificationsAmount)
+    ac.debug('car mod', carModifications)
 
     --Servers()
 
@@ -1756,17 +1824,7 @@ local displayGarageCars = true
 local displayGarageCarsTimer = os.clock()
 local sellCarCheck = false
 
-local rollCageCount = 0
-local brakeKitCount = 0
-local engineIntakeCount = 0
-local engineFuelSystemCount = 0
-local engineOverhaulCount = 0
-local drivetrainDiffCount = 0
-local driverainClutchCount = 0
-local turboTurboCount = 0
-local suspSwaybarCount = 0
-local suspCoiloverCount = 0
-local otherABSCount = 0
+local menuBodyStage = 0
 
 local carArrayX = {}
 local carArrayZ = {}
@@ -3564,10 +3622,10 @@ function script.drawUI()
 
 
 
-                    ui.drawRectFilled(vec2(50,200), vec2(1400,1000), rgbm(0.8,0.8,0.8,0.9))
+                    ui.drawRectFilled(vec2(50,200), vec2(1400,1000), rgbm(1,1,1,0.4))
                     
-                    ui.drawLine(vec2(1540,250), vec2(1760,250), rgbm(0.3,0.3,0.3,1), 75)
-                    ui.drawLine(vec2(1540,350), vec2(1760,350), rgbm(0.3,0.3,0.3,1), 75)
+                    ui.drawLine(vec2(1540,250), vec2(1760,250), rgbm(0.3,0.3,0.3,0.1), 75)
+                    ui.drawLine(vec2(1540,350), vec2(1760,350), rgbm(0.3,0.3,0.3,0.1), 75)
 
                     ui.setCursorX(1576)
                     ui.setCursorY(230)
@@ -3606,7 +3664,7 @@ function script.drawUI()
 
                             if 200 + (i * 150) + usedMarketScroll > 180 and 200 + (i * 150) + usedMarketScroll < 1000 then
 
-                                ui.drawLine(vec2(50,200 + (i * 150) + usedMarketScroll), vec2(1400,200 + (i * 150) + usedMarketScroll), rgbm(0.2,0.2,0.2,0.6), 5)
+                                ui.drawLine(vec2(50,200 + (i * 150) + usedMarketScroll), vec2(1400,200 + (i * 150) + usedMarketScroll), rgbm(0.2,0.2,0.2,0.4), 5)
                             
                             end
 
@@ -3702,7 +3760,11 @@ function script.drawUI()
                             carCollectionState[carCollectionAmount] [6] = tostring(1000) -- engineDamage
                             carCollectionState[carCollectionAmount] [7] = tostring(100) -- oilAmount
                             carCollectionState[carCollectionAmount] [8] = tostring(100) -- oilQuality
-
+                            if #carModifications == 0 then
+                                carModifications = {{usedMarket[confirmCarPurchaseIndex][0], 0}}
+                            else
+                                carModifications [carCollectionAmount + 1] = {usedMarket[confirmCarPurchaseIndex][0], 0}
+                            end
                             carCollection[carCollectionAmount] = usedMarket[confirmCarPurchaseIndex]
                             carCollectionAmount = carCollectionAmount + 1
                             usedMarketExpires[confirmCarPurchaseIndex] = tostring(10)
@@ -4235,37 +4297,42 @@ function script.drawUI()
 
 
 
-                    ui.drawRectFilled(vec2(250,200), vec2(1600,400), rgbm(0.2,0.2,0.2,0.9))
+                    ui.drawRectFilled(vec2(240,190), vec2(1610,410), rgbm(0.4,0.3,0.7,0.1))
+                    ui.drawRectFilled(vec2(250,200), vec2(1600,400), rgbm(0.15,0.0,0.5,0.4))
         
                     
 
                     if loadCheckTimer + 3 < os.clock() and carCollectionAmount > 0 then
 
-                        ui.drawLine(vec2(1540,550), vec2(1760,550), rgbm(0.3,0.3,0.3,1), 75)
-                        ui.drawLine(vec2(1540,650), vec2(1760,650), rgbm(0.3,0.3,0.3,1), 75)
+                        ui.drawLine(vec2(1530,550), vec2(1770,550), rgbm(0.4,0.3,0.7,0.1), 95)
+                        ui.drawLine(vec2(1530,650), vec2(1770,650), rgbm(0.4,0.3,0.7,0.1), 95)
 
-                        ui.drawLine(vec2(780,550), vec2(1120,550), rgbm(0.2,0.2,0.2,0.9), 155)
+                        ui.drawLine(vec2(1540,550), vec2(1760,550), rgbm(0.15,0.0,0.5,0.4), 75)
+                        ui.drawLine(vec2(1540,650), vec2(1760,650), rgbm(0.15,0.0,0.5,0.4), 75)
+
+                        ui.drawLine(vec2(770,550), vec2(1130,550), rgbm(0.4,0.3,0.7,0.1), 175)
+                        ui.drawLine(vec2(780,550), vec2(1120,550), rgbm(0.15,0.0,0.5,0.4), 155)
 
                         if displayGarageCars then
                             ui.setCursorX(350)
                             ui.setCursorY(230)
-                            ui.dwriteTextAligned(carCollection[garageCarCycle] [0], 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+                            ui.dwriteTextAligned(carCollection[garageCarCycle] [0], 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
         
                             ui.setCursorX(336)
                             ui.setCursorY(295)
-                            ui.dwriteTextAligned(carCollection[garageCarCycle] [2], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,0.8))
+                            ui.dwriteTextAligned(carCollection[garageCarCycle] [2], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.5,0.8,1,1))
         
                             ui.setCursorX(336)
                             ui.setCursorY(340)
-                            ui.dwriteTextAligned(carCollection[garageCarCycle] [1], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,0.8))
+                            ui.dwriteTextAligned(carCollection[garageCarCycle] [1], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.5,0.8,1,1))
         
                             ui.setCursorX(1612)
                             ui.setCursorY(530)
-                            ui.dwriteTextAligned('NEXT', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+                            ui.dwriteTextAligned('NEXT', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
         
                             ui.setCursorX(1583)
                             ui.setCursorY(630)
-                            ui.dwriteTextAligned('PREVIOUS', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+                            ui.dwriteTextAligned('PREVIOUS', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
         
                             ui.setCursorX(350)
                             ui.setCursorY(490)
@@ -4273,7 +4340,7 @@ function script.drawUI()
         
                             ui.setCursorX(350)
                             ui.setCursorY(560)
-                            ui.dwriteTextAligned('(' .. math.round(carCollection[garageCarCycle] [3] / 2, 0) .. ')', 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.8,0.8,0.8,1))
+                            ui.dwriteTextAligned('(' .. math.round(carCollection[garageCarCycle] [3] / 2, 0) .. ')', 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,0,0,0.8))
         
                         end
 
@@ -4309,29 +4376,41 @@ function script.drawUI()
                     else
                         ui.setCursorX(350)
                         ui.setCursorY(230)
-                        ui.dwriteTextAligned('NONE FOR NOW', 60, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+                        ui.dwriteTextAligned('NONE FOR NOW', 60, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
         
 
                     end
 
+                    
+                    ui.drawLine(vec2(40,725), vec2(660,725), rgbm(0.4,0.3,0.7,0.1), 525)
+                    ui.drawLine(vec2(50,725), vec2(650,725), rgbm(0.15,0.0,0.5,0.4), 505)
+
+                    ui.setCursorX(230)
+                    ui.setCursorY(490)
+                    ui.dwriteTextAligned('MODIFICATIONS', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
+        
+
+
                     if sellCarCheck then
 
-                        ui.drawLine(vec2(780,685), vec2(1120,685), rgbm(0.2,0.2,0.2,0.9), 65)
+                        ui.drawLine(vec2(770,745), vec2(1130,745), rgbm(0.4,0.3,0.7,0.1), 205)
 
-                        ui.drawLine(vec2(780,785), vec2(920,785), rgbm(0.2,0.2,0.2,0.9), 105)
-                        ui.drawLine(vec2(980,785), vec2(1120,785), rgbm(0.2,0.2,0.2,0.9), 105)
+                        ui.drawLine(vec2(780,685), vec2(1120,685), rgbm(0.15,0.0,0.5,0.4), 65)
+
+                        ui.drawLine(vec2(780,785), vec2(920,785), rgbm(0.15,0.0,0.5,0.4), 105)
+                        ui.drawLine(vec2(980,785), vec2(1120,785), rgbm(0.15,0.0,0.5,0.4), 105)
 
                         ui.setCursorX(350)
                         ui.setCursorY(660)
-                        ui.dwriteTextAligned('ARE YOU SURE?', 35, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+                        ui.dwriteTextAligned('ARE YOU SURE?', 35, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
 
                         ui.setCursorX(250)
                         ui.setCursorY(750)
-                        ui.dwriteTextAligned('YES', 50, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+                        ui.dwriteTextAligned('YES', 50, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
         
                         ui.setCursorX(450)
                         ui.setCursorY(750)
-                        ui.dwriteTextAligned('NO', 50, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,1,1,1))
+                        ui.dwriteTextAligned('NO', 50, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
         
 
                         ui.setCursorX(779)
@@ -4343,9 +4422,13 @@ function script.drawUI()
                             money = money + tonumber(math.round(carCollection[garageCarCycle] [3] / 2, 0))
                             for i = garageCarCycle + 1, carCollectionAmount - 1 do
                                 carCollection[i] = carCollection[i + 1]
+                                carModifications[i] = carModifications[i + 1]
+                                carModificationsAmount[i] = carModificationsAmount[i + 1]
                             end
                             garageCarCycle = garageCarCycle - 1
                             carCollection[carCollectionAmount] = nil
+                            carModifications[carCollectionAmount] = nil
+                            carModificationsAmount[carCollectionAmount] = nil
                             carCollectionAmount = carCollectionAmount - 1
                             displayGarageCarsTimer = os.clock()
                         end
@@ -4826,6 +4909,8 @@ function script.drawUI()
                     ui.setCursorY(-95)
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
+                    ui.drawLine(vec2(120,854), vec2(1380,854), rgbm(0.21,0.21,0.21,1), 190)
+
                     ui.drawLine(vec2(120,304), vec2(280,304), rgbm(0.1,0.1,0.1,1), 140)
                     ui.drawLine(vec2(520,304), vec2(680,304), rgbm(0.1,0.1,0.1,1), 140)
                     ui.drawLine(vec2(920,304), vec2(1080,304), rgbm(0.1,0.1,0.1,1), 140)
@@ -4872,7 +4957,144 @@ function script.drawUI()
                     ui.setCursorY(245)
                     ui.dwriteTextAligned('Chassis', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
                     
+                    ui.setCursorX(120)
+                    ui.setCursorY(235)
+
+                    if ui.button(' ', vec2(160,140)) then
+                        menuBodyStage = 0
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(235)
+
+                    if ui.button('  ', vec2(160,140)) then
+                        menuBodyStage = 1
+                    end
+
+                    ui.setCursorX(920)
+                    ui.setCursorY(235)
+
+                    if ui.button('   ', vec2(160,140)) then
+                        menuBodyStage = 2
+                    end
+
+                    ui.setCursorX(1320)
+                    ui.setCursorY(235)
+
+                    if ui.button('    ', vec2(160,140)) then
+                        menuBodyStage = 3
+                    end
+
+                    if menuBodyStage == 0 then
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('ROLL BAR', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                   
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('Typically popular in convertibles, a roll bar provides protection for possible roll overs and can help stiffen the chassis somewhat.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
                     
+                    elseif menuBodyStage == 1 then
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('HALF CAGE', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                   
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('A half cage is a partial roll cage that reinforces the driver\'s area of a car to make it somewhat safer, particularly in the event of a rollover.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('Half cages can also help stiffen the car chassis somewhat.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                    elseif menuBodyStage == 2 then
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('FULL CAGE', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                   
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('A full cage is a roll cage that reinforces the driver\'s area of a car to make it much safer, particularly in the event of a rollover. Full cages', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('can also help stiffen the car chassis somewhat.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                    elseif menuBodyStage == 3 then
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('STITCH WELD CAR CHASSIS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                   
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('1500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('Stitch welding the car chassis provide a huge improvement to the torsional rigitity of the chassis, which can be very helpful in making a', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('car more stable and predictable at high stress situations for the car body.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                    end
+                    
+                    ui.setCursorX(145)
+                    ui.setCursorY(315)
+                    ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.End, ui.Alignment.Center, 1200, false, rgbm(0.6,0.2,1,1))
+
+                    ui.setCursorX(1138)
+                    ui.setCursorY(879)
+                    if ui.button('       ', vec2(220,70)) then
+                        if menuBodyStage == 0 then
+                            money = money - 500
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Roll Bar'
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '500'
+                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
+                        elseif menuBodyStage == 1 then
+                            money = money - 500
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Half Cage'
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '500'
+                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
+                        elseif menuBodyStage == 2 then
+                            money = money - 1000
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Full Cage'
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
+                        elseif menuBodyStage == 3 then
+                            money = money - 1500
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Chassis Stengthening'
+                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '1500'
+                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
+                        end
+                    end
                     
                     --- BACK ---
 
