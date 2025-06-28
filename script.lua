@@ -1,28 +1,28 @@
 ac.storageSetPath('acs_x86', nil)
 
-local deathPlayerChance = math.randomseed(sim.timeSeconds)
-local deathSound0 = ui.MediaPlayer()
-local deathSound1 = ui.MediaPlayer()
-local deathSound2 = ui.MediaPlayer()
-deathSound0:setSource('http://docs.google.com/uc?export=open&id=1XoeTUqU6TDgo0zk7Xo3ai-oliXvXwhlk'):setAutoPlay(false)
-deathSound1:setSource('http://docs.google.com/uc?export=open&id=1hArZQuTvT1FqEEovr31eNnJm1Swk4_Ce'):setAutoPlay(false)
-deathSound2:setSource('http://docs.google.com/uc?export=open&id=1nB3-hoj4q7vvVxyM4Sse2M4kZmNWL-8X'):setAutoPlay(false)
+DeathPlayerChance = math.randomseed(sim.timeSeconds)
+DeathSound0 = ui.MediaPlayer()
+DeathSound1 = ui.MediaPlayer()
+DeathSound2 = ui.MediaPlayer()
+DeathSound0:setSource('http://docs.google.com/uc?export=open&id=1XoeTUqU6TDgo0zk7Xo3ai-oliXvXwhlk'):setAutoPlay(false)
+DeathSound1:setSource('http://docs.google.com/uc?export=open&id=1hArZQuTvT1FqEEovr31eNnJm1Swk4_Ce'):setAutoPlay(false)
+DeathSound2:setSource('http://docs.google.com/uc?export=open&id=1nB3-hoj4q7vvVxyM4Sse2M4kZmNWL-8X'):setAutoPlay(false)
 
-local musicVolume = 50
+MusicVolume = 50
 
-local menu0 = ui.MediaPlayer()
-local menu1 = ui.MediaPlayer()
-local menu2 = ui.MediaPlayer()
-local menu3 = ui.MediaPlayer()
-local menu4 = ui.MediaPlayer()
-local menugtauto = ui.MediaPlayer()
+Menu0 = ui.MediaPlayer()
+Menu1 = ui.MediaPlayer()
+Menu2 = ui.MediaPlayer()
+Menu3 = ui.MediaPlayer()
+Menu4 = ui.MediaPlayer()
+Menugtauto = ui.MediaPlayer()
 
-menu0:setSource('http://docs.google.com/uc?export=open&id=1PH9x-cIfdWAVAwhNu5UZ3ot_qjpuc5SM'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-menu1:setSource('http://docs.google.com/uc?export=open&id=1jmxdfUgmyaqPwPa8r5kRSvyodK-WXsi5'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-menu2:setSource('http://docs.google.com/uc?export=open&id=1k30QEjvpcCHUwfwYAmWBk53q-U1NyMer'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-menu3:setSource('http://docs.google.com/uc?export=open&id=1fmkhiTqETSKN1HwZUQ-aSJhy16IXw3g9'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-menu4:setSource('http://docs.google.com/uc?export=open&id=1LIwvs6XHvIUgkU8BZ0Kfk5F_82BZI_BC'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-menugtauto:setSource('http://docs.google.com/uc?export=open&id=1-B7imrBnQkEkMo6SFJSESCZ88_jviiUl'):setAutoPlay(false):setVolume(musicVolume * 0.01)
+Menu0:setSource('http://docs.google.com/uc?export=open&id=1PH9x-cIfdWAVAwhNu5UZ3ot_qjpuc5SM'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+Menu1:setSource('http://docs.google.com/uc?export=open&id=1jmxdfUgmyaqPwPa8r5kRSvyodK-WXsi5'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+Menu2:setSource('http://docs.google.com/uc?export=open&id=1k30QEjvpcCHUwfwYAmWBk53q-U1NyMer'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+Menu3:setSource('http://docs.google.com/uc?export=open&id=1fmkhiTqETSKN1HwZUQ-aSJhy16IXw3g9'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+Menu4:setSource('http://docs.google.com/uc?export=open&id=1LIwvs6XHvIUgkU8BZ0Kfk5F_82BZI_BC'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+Menugtauto:setSource('http://docs.google.com/uc?export=open&id=1-B7imrBnQkEkMo6SFJSESCZ88_jviiUl'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
 
 local cartemp = {0, 0, 0}
 local cartempgoal = {0, 0, 0}
@@ -142,6 +142,19 @@ function StorageUnpackCarModificationsAmountNested(data,cars) --same thing but w
     return storedVals
 end
 
+function StorageUnpackCarStatsNested(data,items) --same thing but with nested tables
+    local storedVals = {}
+    local k = 1 --just a simple iterator over the string
+    for i=1,items do
+        storedVals [i] = {}
+        for j=1,9 do
+            storedVals[i][j] = string.split(data,'/')[k]
+            k = k+1
+        end
+    end
+    return storedVals
+end
+
 function StoragePack(data) --prepairing string to store
     local storedString = ""
     for i=1, #data do
@@ -203,7 +216,22 @@ function StoragePackCarModificationsAmountNested(data,cars)
     return storedString
 end
 
+function StoragePackCarStatsNested(data,items) --same thing but with nested tables
+    local storedString = ""
+    for i=1, items do
+        for j=1,9 do
+            storedString = storedString .. data[i][j]
+            if i*j ~= 200 then --eh, it works
+                storedString = storedString .. "/" 
+            end
+        end
+    end
+    return storedString
+end
+
 local storedValues = ac.storage{
+    carStatsAmount = 0,
+    carStats = '',
 	died = 0,
     fuel = 10,
     mapType = 0,
@@ -239,7 +267,7 @@ local storedValues = ac.storage{
     carCollectionState = '',
     carModifications = '',
     carModificationsAmount = '',
-    musicVolume = 50
+    MusicVolume = 50
 }
 
 --- TIRE ARRAY KEY ---
@@ -272,10 +300,15 @@ local tireArray = {
 -- MICHELIN --
 
 {'Michelin Primacy HP', 1, '245/40/R17', 1000},
+
 {'Michelin Pilot Sport 2', 18, '205/55/R17', 1200, '225/45/ZR17', 1050, '235/50/ZR17', 1250, '255/40/ZR17', 1500, '225/40/ZR18', 1100, '235/40/ZR18', 1050, '265/35/ZR18', 1450, '265/40/ZR18', 1550, '285/30/ZR18', 2050, '295/30/ZR18', 1950, '295/35/ZR18', 2300, '235/35/ZR19', 1450, '255/40/ZR19', 1600, '265/35/ZR19', 1700, '295/30/ZR19', 1950, '305/30/ZR19', 2100, '275/45/ZR20', 2050},
 {'Michelin Pilot Sport 4', 28, '205/55/ZR16', 750, '205/40/ZR18', 1000, '215/40/R18', 1050, '225/40/ZR18', 800, '235/40/ZR18', 950, '235/45/ZR18', 1000, '245/40/ZR18', 950, '225/40/ZR19', 1100, '225/55/R19', 1100, '235/45/ZR19', 1150, '245/40/R19', 1250, '245/45/ZR19', 1350, '245/45/R19', 1300, '255/35/ZR19', 1150, '255/40/R19', 1350, '255/45/R19', 1350, '265/45/ZR19', 1500, '275/40/ZR19', 1550, '275/45/R19', 1600, '295/40/ZR19', 1550, '245/45/R20', 1350, '255/40/R20', 1600, '275/40/ZR20', 1500, '285/40/R20', 1700, '315/35/ZR20', 2500, '275/35/ZR21', 2100, '315/30/ZR21', 2500, '325/30/ZR21', 2200},
+{'Michelin Pilot Sport 4 S', 1, '', 0},
 {'Michelin Pilot Super Sport', 39, '225/40/ZR18', 900, '225/45/ZR18', 1150, '245/35/ZR18', 1100, '245/40/ZR18', 1000, '255/40/ZR18', 1100, '265/40/ZR18', 1400, '275/40/ZR18', 1350, '285/35/ZR18', 1550, '295/35/ZR18', 1800, '245/35/ZR19', 1250, '255/35/ZR19', 1250, '255/45/ZR19', 1450, '265/35/ZR19', 1550, '265/40/ZR19', 1500, '275/35/ZR19', 1500, '285/30/ZR19', 1750, '285/40/ZR19', 1800, '295/35/ZR19', 1650, '305/35/ZR19', 1750, '245/35/ZR20', 1800, '245/35/R20', 1700, '245/40/ZR20', 1500, '255/40/ZR20', 1350, '265/30/ZR20', 1500, '265/35/ZR20', 1700, '275/30/R20', 1800, '275/35/ZR20', 1550, '285/30/ZR20', 1700, '295/30/ZR20', 1650, '295/35/ZR20', 1850, '305/30/ZR20', 2050, '315/35/ZR20', 2250, '335/30/ZR20', 2150, '245/35/ZR21', 1700, '285/35/ZR21', 1850, '325/30/ZR21', 2000, '275/35/ZR22', 2150, '305/30/ZR22', 2300, '305/35/ZR22', 2500},
 {'Michelin Pilot Super Sport ZP', 9, '245/40/ZR18', 1300, '245/35/ZR19', 1450, '285/30/ZR19', 1900, '285/35/ZR19', 1650, '285/30/ZR20', 1800, '335/25/ZR20', 2350, '245/35/ZR21', 1900, '245/40/RF21', 2100, '275/35/RF21', 2150},
+
+{'Michelin Pilot Sport Cup 2', 1, '', 0},
+{'Michelin Pilot Sport Cup 2 R', 1, '', 0},
 
 -- NANKANG --
 
@@ -288,6 +321,11 @@ local tireArray = {
 '255/30/ZR21', 1950, '255/40/R21', 1750, '265/40/ZR21', 1700, '265/40/R21', 1550, '265/45/R21', 1850, '275/30/ZR21', 2000, '275/35/ZR21', 2000, '285/30/ZR21', 2050, '285/40/ZR21', 2050, '285/45/ZR21', 2650, '295/35/ZR21', 1750, '295/35/R21', 1750, '295/40/ZR21', 1750, '315/35/ZR21', 2300, '325/25/ZR21', 2250, '355/25/ZR21', 2450, '265/40/R22', 1750, '275/40/R22', 1950, '285/35/ZR22', 2100, '285/40/ZR22', 2950, '285/40/R22', 2100, '315/30/ZR22', 2800, '325/35/R22', 2200, '335/25/ZR22', 2900},
 
 -- TOYO --
+
+{'Toyo Proxes RA1', 1, '', 0},
+{'Toyo Proxes R888', 1, '', 0},
+{'Toyo Proxes R888R', 1, '', 0},
+{'Toyo Proxes RR', 1, '', 0},
 
 -- VALINO --
 
@@ -320,6 +358,11 @@ local carCollection = {}
 local carCollectionState = {}
 local carModifications = {}
 local carModificationsAmount = {}
+
+CarStats = {}
+CarStatsAmount = 0
+CarStatsSelected = 1
+CarStatsFoundMatch = false
 
 local fpsClock = os.clock()
 local initialLaunch = false
@@ -395,10 +438,12 @@ local carArray = {
 {'2000 Mitsubishi Lancer RS Evolution VI Tommi Makinen Edition', 'Manual', 25000, 70000, 2, 1, 'Scotia White', 1},
 
 {'2003 Mitsubishi Lancer Evolution VIII GSR', 'Manual', 15000, 30000, 11, 6, 'Red Solid', 8, 'Yellow Solid', 6, 'Medium Purple Mica', 7, 'White Solid', 35, 'Cool Silver Metallic', 26, 'Black Mica', 20},
-{'2004 Mitsubishi Lancer Evolution VIII MR GSR', 'Manual', 15000, 35000, 8, 4, 'Medium Purplish Gray Mica', 48, 'Cool Silver Metallic', 21, 'White Pearl', 24, 'Red Solid', 7},
+{'2004 Mitsubishi Lancer Evolution VIII MR GSR', 'Manual', 15000, 35000, 3, 4, 'Medium Purplish Gray Mica', 48, 'Cool Silver Metallic', 21, 'White Pearl', 24, 'Red Solid', 7},
+{'2004 Mitsubishi Lancer Evolution VIII MR GSR [Manufacturer Options]', 'Manual', 15000, 35000, 5, 4, 'Medium Purplish Gray Mica', 48, 'Cool Silver Metallic', 21, 'White Pearl', 24, 'Red Solid', 7},
 {'2005 Mitsubishi Lancer Evolution IX GSR', 'Manual', 20000, 50000, 9, 6, 'White Solid', 30, 'Yellow Solid', 4, 'Red Solid', 7, 'Blue Mica', 13, 'Black Mica', 20, 'Cool Silver Metallic', 26},
 {'2005 Mitsubishi Lancer Evolution IX GT', 'Manual', 20000, 50000, 5, 6, 'White Solid', 38, 'Yellow Solid', 6, 'Red Solid', 10, 'Blue Mica', 12, 'Black Mica', 13, 'Cool Silver Metallic', 21},
-{'2006 Mitsubishi Lancer Evolution IX MR GSR', 'Manual', 25000, 55000, 5, 4, 'White Pearl', 35, 'Cool Silver Metallic', 14, 'Medium Purplish Gray Mica', 40, 'Red Solid', 11},
+{'2006 Mitsubishi Lancer Evolution IX MR GSR', 'Manual', 25000, 55000, 2, 4, 'White Pearl', 35, 'Cool Silver Metallic', 14, 'Medium Purplish Gray Mica', 40, 'Red Solid', 11},
+{'2006 Mitsubishi Lancer Evolution IX MR GSR [Manufacturer Options]', 'Manual', 25000, 55000, 3, 4, 'White Pearl', 35, 'Cool Silver Metallic', 14, 'Medium Purplish Gray Mica', 40, 'Red Solid', 11},
 
 --- NISSAN ---
 
@@ -423,15 +468,15 @@ local carArray = {
 
 {'1995 Nissan Skyline GT-R (R33)', 'Manual', 35000, 90000, 10, 7, 'Super Clear Red', 3, 'Deep Marine Blue', 3, 'Black', 8, 'Spark Silver Metallic', 27, 'Dark Grey Pearl', 5, 'Midnight Purple', 18, 'White', 36},
 {'1995 Nissan Skyline GT-R V-Spec (R33)', 'Manual', 40000, 90000, 9, 7, 'Super Clear Red', 3, 'Deep Marine Blue', 3, 'Black', 7, 'Spark Silver Metallic', 29, 'Dark Grey Pearl', 6, 'Midnight Purple', 20, 'White', 32},
---{'1995 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 55000, 120000, 1, 1, 'White', 1},
+{'1995 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 55000, 120000, 1, 1, 'White', 1},
 {'1996 Nissan Skyline GT-R (R33)', 'Manual', 35000, 90000, 7, 7, 'Super Clear Red II', 2, 'Deep Marine Blue', 3, 'Black', 7, 'Dark Grey Pearl', 2, 'Sonic Silver', 24, 'Midnight Purple', 11, 'White', 50},
---{'1996 Nissan Skyline GT-R LM-Limited (R33)', 'Manual', 70000, 140000, 2, 1, 'Champion Blue', 1},
+{'1996 Nissan Skyline GT-R LM-Limited (R33)', 'Manual', 70000, 140000, 2, 1, 'Champion Blue', 1},
 {'1996 Nissan Skyline GT-R V-Spec (R33)', 'Manual', 40000, 90000, 5, 7, 'Super Clear Red II', 3, 'Deep Marine Blue', 3, 'Black', 7, 'Dark Grey Pearl', 3, 'Sonic Silver', 25, 'Midnight Purple', 15, 'White', 43},
---{'1996 Nissan Skyline GT-R V-Spec LM-Limited (R33)', 'Manual', 50000, 110000, 2, 1, 'Champion Blue', 1},
---{'1996 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 65000, 140000, 1, 1, 'White', 1},
+{'1996 Nissan Skyline GT-R V-Spec LM-Limited (R33)', 'Manual', 50000, 110000, 2, 1, 'Champion Blue', 1},
+{'1996 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 65000, 140000, 1, 1, 'White', 1},
 {'1997 Nissan Skyline GT-R (R33)', 'Manual', 35000, 120000, 6, 9, 'Super Clear Red II', 2, 'Active Red', 1, 'Deep Marine Blue', 3, 'Black Pearl', 1, 'Black', 5, 'Dark Grey Pearl', 2, 'Sonic Silver', 27, 'Midnight Purple', 9, 'White', 50},
 {'1997 Nissan Skyline GT-R V-Spec (R33)', 'Manual', 40000, 120000, 5, 9, 'Super Clear Red II', 3, 'Active Red', 1, 'Deep Marine Blue', 3, 'Black Pearl', 1, 'Black', 8, 'Dark Grey Pearl', 3, 'Sonic Silver', 28, 'Midnight Purple', 9, 'White', 45},
---{'1997 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 75000, 160000, 1, 1, 'White', 1},
+{'1997 Nissan Skyline GT-R V-Spec N1 (R33)', 'Manual', 75000, 160000, 1, 1, 'White', 1},
 
 {'1999 Nissan Silvia Spec-R (S15)', 'Manual', 20000, 50000, 17, 7, 'Sparkling Silver', 27, 'Brilliant Blue', 15, 'Pearl White', 44, 'Light Blueish Silver', 1, 'Lightning Yellow', 2, 'Active Red', 4, 'Super Black', 8},
 {'1999 Nissan Silvia Spec-R (S15)', 'Automatic', 17000, 40000, 3, 7, 'Sparkling Silver', 27, 'Brilliant Blue', 15, 'Pearl White', 44, 'Light Blueish Silver', 1, 'Lightning Yellow', 2, 'Active Red', 4, 'Super Black', 8},
@@ -502,6 +547,24 @@ local carArray = {
 {'1995 Suzuki Cappuccino (EA21R)', 'Automatic', 3000, 20000, 8, 3, 'Dark Turquoise Green Metallic', 30, 'Antares Red', 50, 'Mercury Silver Metallic', 20},
 
 --- TOYOTA ---
+
+{'1983 Toyota Corolla Levin 3door GT-APEX (AE86)', 'Manual', 15000, 45000, 25, 3, 'High Metal Two-Tone', 25, 'High Tech Two-Tone', 70, 'High Flash Two-Tone', 5},
+{'1983 Toyota Corolla Levin 3door GTV (AE86)', 'Manual', 20000, 50000, 15, 3, 'High Metal', 25, 'High Tech', 70, 'High Flash', 5},
+{'1983 Toyota Sprinter Trueno 3door GT-APEX (AE86)', 'Manual', 30000, 75000, 25, 3, 'High Metal Two-Tone', 25, 'High Tech Two-Tone', 70, 'High Flash Two-Tone', 5},
+{'1983 Toyota Sprinter Trueno 3door GTV (AE86)', 'Manual', 40000, 75000, 15, 3, 'High Metal', 25, 'High Tech', 70, 'High Flash', 5},
+
+{'1994 Toyota MR2 GT (SW20)', 'Manual', 20000, 35000, 6, 7, 'Super White II', 37, 'Blueish Grey Agendum Mica', 16, 'Black', 35, 'Super Red II', 23, 'Super Bright Yellow', 2, 'Dark Green Mica', 4, 'Strong Blue Metallic', 8},
+{'1994 Toyota MR2 GT-S (SW20)', 'Manual', 15000, 30000, 8, 7, 'Super White II', 37, 'Blueish Grey Agendum Mica', 16, 'Black', 35, 'Super Red II', 23, 'Super Bright Yellow', 2, 'Dark Green Mica', 4, 'Strong Blue Metallic', 8},
+{'1994 Toyota MR2 G-Limited (SW20)', 'Manual', 8000, 30000, 9, 7, 'Super White II', 37, 'Blueish Grey Agendum Mica', 16, 'Black', 35, 'Super Red II', 23, 'Super Bright Yellow', 2, 'Dark Green Mica', 4, 'Strong Blue Metallic', 8},
+{'1994 Toyota MR2 G-Limited (SW20)', 'Automatic', 7000, 25000, 6, 7, 'Super White II', 37, 'Blueish Grey Agendum Mica', 16, 'Black', 35, 'Super Red II', 23, 'Super Bright Yellow', 2, 'Dark Green Mica', 4, 'Strong Blue Metallic', 8},
+{'1996 Toyota MR2 GT (SW20)', 'Manual', 20000, 35000, 5, 7, 'Super White II', 28, 'Sonic Shadow Toning', 3, 'Black', 28, 'Super Red II', 35, 'Super Bright Yellow', 3, 'Dark Green Mica', 3, 'Purplish Blue Mica Metallic', 1},
+{'1996 Toyota MR2 GT-S (SW20)', 'Manual', 15000, 30000, 7, 7, 'Super White II', 28, 'Sonic Shadow Toning', 3, 'Black', 28, 'Super Red II', 35, 'Super Bright Yellow', 3, 'Dark Green Mica', 3, 'Purplish Blue Mica Metallic', 1},
+{'1996 Toyota MR2 G-Limited (SW20)', 'Manual', 8000, 30000, 7, 7, 'Super White II', 28, 'Sonic Shadow Toning', 3, 'Black', 28, 'Super Red II', 35, 'Super Bright Yellow', 3, 'Dark Green Mica', 3, 'Purplish Blue Mica Metallic', 1},
+{'1996 Toyota MR2 G-Limited (SW20)', 'Automatic', 7000, 25000, 4, 7, 'Super White II', 28, 'Sonic Shadow Toning', 3, 'Black', 28, 'Super Red II', 35, 'Super Bright Yellow', 3, 'Dark Green Mica', 3, 'Purplish Blue Mica Metallic', 1},
+{'1998 Toyota MR2 GT (SW20)', 'Manual', 25000, 40000, 3, 7, 'Super Red II', 36, 'Orange Mica Metallic', 1, 'Beige Mica Metallic', 2, 'Black', 29, 'Dark Purple Mica', 1, 'Super White II', 29, 'Sonic Shadow Toning', 3},
+{'1998 Toyota MR2 GT-S (SW20)', 'Manual', 20000, 35000, 5, 7, 'Super Red II', 36, 'Orange Mica Metallic', 1, 'Beige Mica Metallic', 2, 'Black', 29, 'Dark Purple Mica', 1, 'Super White II', 29, 'Sonic Shadow Toning', 3},
+{'1998 Toyota MR2 G-Limited (SW20)', 'Manual', 10000, 35000, 5, 7, 'Super Red II', 36, 'Orange Mica Metallic', 1, 'Beige Mica Metallic', 2, 'Black', 29, 'Dark Purple Mica', 1, 'Super White II', 29, 'Sonic Shadow Toning', 3},
+{'1998 Toyota MR2 G-Limited (SW20)', 'Automatic', 10000, 35000, 3, 7, 'Super Red II', 36, 'Orange Mica Metallic', 1, 'Beige Mica Metallic', 2, 'Black', 29, 'Dark Purple Mica', 1, 'Super White II', 29, 'Sonic Shadow Toning', 3},
 
 {'1993 Toyota Supra RZ (JZA80)', 'Manual', 30000, 80000, 13, 6, 'Super White II', 25, 'Anthracite Metallic', 2, 'Silver Metallic Graphite', 33, 'Black', 24, 'Super Red IV', 14, 'Baltic Blue Metallic', 2},
 {'1993 Toyota Supra SZ-R (JZA80)', 'Manual', 30000, 60000, 14, 6, 'Super White II', 25, 'Anthracite Metallic', 2, 'Silver Metallic Graphite', 33, 'Black', 24, 'Super Red IV', 14, 'Baltic Blue Metallic', 2},
@@ -602,16 +665,6 @@ function Testing()
     ac.debug('inventory', carCollection)
 
     ac.debug('inv specs', carCollectionState)
-
-
-    if carCollectionAmount > 0 then
-        for i = 0, carCollectionAmount - 1 do
-            --if carCollectionState [i] [0] == 'empty' then
-                --carCollectionState [i] [0] = ac.getCarID(0)
-            --end
-
-        end
-    end
 
     if pressedNext then
         carRarityTempArray = {}
@@ -774,15 +827,40 @@ local isOnFireChance = math.randomseed(sim.timeSeconds)
 
 function LoadChecking()
 
-    if loadCheckTimer + 1 > os.clock() then
-        musicVolume = storedValues.musicVolume
+    if loadCheckTimer + 2 > os.clock() then
+
+        CarStatsAmount = storedValues.carStatsAmount
+        CarStats = StorageUnpackCarStatsNested(storedValues.carStats, storedValues.carStatsAmount)
+
+        MusicVolume = storedValues.MusicVolume
         died = storedValues.died
-        fuel = storedValues.fuel
-        oilAmount = storedValues.oilAmount
-        oilQuality = storedValues.oilQuality
         tempEnabled = storedValues.tempEnabled
         tableCount = storedValues.tableCount
         carCollectionAmount = storedValues.carCollectionAmount
+
+        if CarStatsAmount == 0 then
+            CarStats[1] = {
+                ac.getCarID(0), -- car ID
+                10, -- fuel
+                0,  -- carDamage0
+                0,  -- carDamage1
+                0,  -- carDamage2
+                0,  -- carDamage3
+                1000,  -- engine damage
+                80, -- oil amount
+                80 -- oil quality
+            }
+            CarStatsFoundMatch = true
+            CarStatsAmount = 1
+        else
+            for i=1, storedValues.carStatsAmount do
+                if tostring(CarStats[i][1]) == tostring(ac.getCarID(0)) then
+                    CarStatsSelected = i
+                    CarStatsFoundMatch = true
+                end
+            end
+
+        end
         if storedValues.usedMarket ~= nil then
             usedMarket = StorageUnpackUsedMarketNested(storedValues.usedMarket, 50)
         end
@@ -796,16 +874,37 @@ function LoadChecking()
         carCollection = StorageUnpackCarCollectionNested(storedValues.carCollection, storedValues.carCollectionAmount)
     end
 
-    if loadCheckTimer + 3 < os.clock() then
-        fuel = storedValues.fuel
+    if loadCheckTimer + 3.8 < os.clock() then
+
+        if CarStatsFoundMatch == false then
+
+            CarStatsSelected = CarStatsAmount + 1
+            CarStatsAmount = CarStatsAmount + 1
+
+            CarStats[CarStatsSelected] = {
+                ac.getCarID(0), -- car ID
+                10, -- fuel
+                0,  -- carDamage0
+                0,  -- carDamage1
+                0,  -- carDamage2
+                0,  -- carDamage3
+                1000,  -- engine damage
+                80, -- oil amount
+                80 -- oil quality
+            }
+            
+            CarStatsFoundMatch = true
+            
+        end
+
         loadCheck = true
-    elseif loadCheckTimer + 2 > os.clock() and loadCheckTimer + 1 < os.clock() then
-        physics.setCarFuel(0, storedValues.fuel)
-        physics.setCarBodyDamage(0, vec4(storedValues.carDamage0, storedValues.carDamage1, storedValues.carDamage2, storedValues.carDamage3))
-        physics.setCarEngineLife(0, storedValues.engineDamage)
-        engineDamage = storedValues.engineDamage
+    elseif loadCheckTimer + 2.5 > os.clock() and loadCheckTimer + 3 < os.clock() then
+
+        physics.setCarFuel(0, CarStats[CarStatsSelected][2])
+        physics.setCarBodyDamage(0, vec4(CarStats[CarStatsSelected][3], CarStats[CarStatsSelected][4], CarStats[CarStatsSelected][5], CarStats[CarStatsSelected][6]))
+        physics.setCarEngineLife(0, CarStats[CarStatsSelected][7])
+        engineDamage = CarStats[CarStatsSelected][7]
         physics.blockTeleportingToPits()
-        fuel = storedValues.fuel
     end
 
     if ac.getTrackID() == "kanazawa" then
@@ -834,31 +933,34 @@ function script.update(dt)
 
     ac.storageSetPath('acs_x86', nil)
 
-    deathSound0:setSource('http://docs.google.com/uc?export=open&id=1XoeTUqU6TDgo0zk7Xo3ai-oliXvXwhlk'):setAutoPlay(false)
-    deathSound1:setSource('http://docs.google.com/uc?export=open&id=1hArZQuTvT1FqEEovr31eNnJm1Swk4_Ce'):setAutoPlay(false)
-    deathSound2:setSource('http://docs.google.com/uc?export=open&id=1nB3-hoj4q7vvVxyM4Sse2M4kZmNWL-8X'):setAutoPlay(false)
+    DeathSound0:setSource('http://docs.google.com/uc?export=open&id=1XoeTUqU6TDgo0zk7Xo3ai-oliXvXwhlk'):setAutoPlay(false)
+    DeathSound1:setSource('http://docs.google.com/uc?export=open&id=1hArZQuTvT1FqEEovr31eNnJm1Swk4_Ce'):setAutoPlay(false)
+    DeathSound2:setSource('http://docs.google.com/uc?export=open&id=1nB3-hoj4q7vvVxyM4Sse2M4kZmNWL-8X'):setAutoPlay(false)
 
-    menu0:setSource('http://docs.google.com/uc?export=open&id=1PH9x-cIfdWAVAwhNu5UZ3ot_qjpuc5SM'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-    menu1:setSource('http://docs.google.com/uc?export=open&id=1jmxdfUgmyaqPwPa8r5kRSvyodK-WXsi5'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-    menu2:setSource('http://docs.google.com/uc?export=open&id=1k30QEjvpcCHUwfwYAmWBk53q-U1NyMer'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-    menu3:setSource('http://docs.google.com/uc?export=open&id=1fmkhiTqETSKN1HwZUQ-aSJhy16IXw3g9'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-    menu4:setSource('http://docs.google.com/uc?export=open&id=1LIwvs6XHvIUgkU8BZ0Kfk5F_82BZI_BC'):setAutoPlay(false):setVolume(musicVolume * 0.01)
-    menugtauto:setSource('http://docs.google.com/uc?export=open&id=1-B7imrBnQkEkMo6SFJSESCZ88_jviiUl'):setAutoPlay(false):setVolume(musicVolume * 0.01)
+    Menu0:setSource('http://docs.google.com/uc?export=open&id=1PH9x-cIfdWAVAwhNu5UZ3ot_qjpuc5SM'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+    Menu1:setSource('http://docs.google.com/uc?export=open&id=1jmxdfUgmyaqPwPa8r5kRSvyodK-WXsi5'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+    Menu2:setSource('http://docs.google.com/uc?export=open&id=1k30QEjvpcCHUwfwYAmWBk53q-U1NyMer'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+    Menu3:setSource('http://docs.google.com/uc?export=open&id=1fmkhiTqETSKN1HwZUQ-aSJhy16IXw3g9'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+    Menu4:setSource('http://docs.google.com/uc?export=open&id=1LIwvs6XHvIUgkU8BZ0Kfk5F_82BZI_BC'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+    Menugtauto:setSource('http://docs.google.com/uc?export=open&id=1-B7imrBnQkEkMo6SFJSESCZ88_jviiUl'):setAutoPlay(false):setVolume(MusicVolume * 0.01)
+
+    ac.debug('car stats array', CarStats)
+    ac.debug('car stats amount', CarStatsAmount)
+    ac.debug('car stats selector', CarStatsSelected)
+    ac.debug('stored car stats array', storedValues.carStats)
+    ac.debug('bool match', CarStatsFoundMatch)
+
 
 	if loadCheck then
+
+        ac.debug('car array id', tostring(CarStats[1][1]))
+        ac.debug('car id', tostring(ac.getCarID(0)))
 
         if saveTimer + 1 < os.clock() then
             saveTimer = os.clock()
 
-            storedValues.musicVolume = musicVolume
+            storedValues.MusicVolume = MusicVolume
             storedValues.died = died
-            storedValues.fuel = fuel
-            storedValues.oilAmount = oilAmount
-            storedValues.oilQuality = oilQuality
-            storedValues.carDamage0 = car.damage[0]
-            storedValues.carDamage1 = car.damage[1]
-            storedValues.carDamage2 = car.damage[2]
-            storedValues.carDamage3 = car.damage[3]
             storedValues.tempEnabled = tempEnabled
             if tableCount > 49 then
                 storedValues.usedMarket = StoragePackUsedMarketNested(usedMarket)
@@ -875,11 +977,27 @@ function script.update(dt)
                 storedValues.carModificationsAmount = ""
             end
             storedValues.tableCount = tableCount
-            if enginedamageFirstLoad + 10 > os.clock() then
-                storedValues.engineDamage = engineDamage
-                physics.setCarEngineLife(0, engineDamage)
-            else
-                storedValues.engineDamage = car.engineLifeLeft
+
+            if loadCheckTimer + 4 < os.clock() then
+
+                storedValues.carStatsAmount = CarStatsAmount
+                storedValues.carStats = StoragePackCarStatsNested(CarStats, CarStatsAmount)
+
+                CarStats[CarStatsSelected][2] = fuel
+                CarStats[CarStatsSelected][8] = oilAmount
+                CarStats[CarStatsSelected][9] = oilQuality
+                CarStats[CarStatsSelected][3] = car.damage[0]
+                CarStats[CarStatsSelected][4] = car.damage[1]
+                CarStats[CarStatsSelected][5] = car.damage[2]
+                CarStats[CarStatsSelected][6] = car.damage[3]
+
+                if enginedamageFirstLoad + 10 > os.clock() then
+                    CarStats[CarStatsSelected][7] = engineDamage
+                    physics.setCarEngineLife(0, engineDamage)
+                else
+                    CarStats[CarStatsSelected][7] = car.engineLifeLeft
+                end
+
             end
 
         end
@@ -1104,7 +1222,7 @@ function script.update(dt)
         end
 
         if math.abs(car1.acceleration.x) + math.abs(car1.acceleration.y) + math.abs(car1.acceleration.z) > 20 * safetyRating and deathDetectorSpeed > 50 + (safetyRating * 20) + (hasRollcage * 100) then
-            deathPlayerChance = math.random(0,2)
+            DeathPlayerChance = math.random(0,2)
             ac.sendChatMessage(' has died from crash impact.')
             diedTime = os.clock()
             died = 1
@@ -1801,33 +1919,54 @@ local uiColor = rgbm(100, 100, 100, 100)
 
 --end
 
-local mainMenu = 1
-local mainMenuToggle = 0
-local stickColor = rgbm(0.3,0.3,0.3,1)
-local stickColorGroove = rgbm(0.25,0.25,0.25,1)
-local sticktoggle = false
-local sticktoggleadd = 0
-local sticktoggled = false
-local oilcaptoggled = false
-local oilSnapped = false
-local oilPouring = false
-local oilDraining = false
+MainMenu = 1
+MainMenuToggle = 0
+StickColor = rgbm(0.3,0.3,0.3,1)
+StickColorGroove = rgbm(0.25,0.25,0.25,1)
+Sticktoggle = false
+Sticktoggleadd = 0
+Sticktoggled = false
+Oilcaptoggled = false
+OilSnapped = false
+OilPouring = false
+OilDraining = false
 
-local menuState = 0
-local menuMusicsSelector = math.randomseed(sim.timeSeconds)
-local transferPersonType = 0
-local justtransfered = false
-local usedMarketScroll = 0
-local confirmCarPurchaseIndex = 1
-local garageCarCycle = 0
-local displayGarageCars = true
-local displayGarageCarsTimer = os.clock()
-local sellCarCheck = false
+MenuState = 0
+MenuMusicsSelector = math.randomseed(sim.timeSeconds)
+TransferPersonType = 0
+Justtransfered = false
+UsedMarketScroll = 0
+ConfirmCarPurchaseIndex = 1
+GarageCarCycle = 0
+DisplayGarageCars = true
+DisplayGarageCarsTimer = os.clock()
+SellCarCheck = false
+CarmodsPage = 0
 
-local menuBodyStage = 0
+MenuBodyStage = 0
+MenuBrakeStage = 0
+MenuBrakeFrontStage = 0
+MenuBrakeRearStage = 0
+MenuEngineStage = 0
+MenuEngineCoolStage = 0
+MenuEngineIntakeStage = 0
+MenuEngineFuelStage = 0
+MenuEngineOverhaulStage = 0
+MenuDrivetrainStage = 0
+MenuDrivetrainGearStage = 0
+MenuDrivetrainDiffStage = 0
+MenuDrivetrainClutchStage = 0
+MenuTurboStage = 0
+MenuTurboTurboStage = 0
+MenuSuspStage = 0
+MenuSuspSwayStage = 0
+MenuSuspSpringStage = 0
+MenuSuspCoilStage = 0
+MenuSuspArmStage = 0
+MenuSuspOtherStage = 0
 
-local carArrayX = {}
-local carArrayZ = {}
+CarArrayX = {}
+CarArrayZ = {}
 
 function script.drawUI()
 
@@ -1836,67 +1975,69 @@ function script.drawUI()
     local simstate = ac.getSim()
     local playerCarStates
 
-    if mainMenu > 1 then
-        mainMenu = 0
+    if MainMenu > 1 then
+        MainMenu = 0
     end
 
-    if ac.isKeyDown(121) and not mainMenuToggle then
-        mainMenu = mainMenu + 1
-        menuMusicsSelector = math.random(0,4)
-        mainMenuToggle = true
+    if ac.isKeyDown(121) and not MainMenuToggle then
+        MainMenu = MainMenu + 1
+        MenuMusicsSelector = math.random(0,4)
+        MainMenuToggle = true
     end
 
-    if mainMenuToggle and not ac.isKeyDown(121) then
-        mainMenuToggle = false
+    if MainMenuToggle and not ac.isKeyDown(121) then
+        MainMenuToggle = false
     end
 
-    if mainMenu == 1 then
-        menu0:pause():setCurrentTime(0)
-        menu1:pause():setCurrentTime(0)
-        menu2:pause():setCurrentTime(0)
-        menu3:pause():setCurrentTime(0)
-        menu4:pause():setCurrentTime(0)
-        menugtauto:pause():setCurrentTime(0)
+    if MainMenu == 1 then
+        Menu0:pause():setCurrentTime(0)
+        Menu1:pause():setCurrentTime(0)
+        Menu2:pause():setCurrentTime(0)
+        Menu3:pause():setCurrentTime(0)
+        Menu4:pause():setCurrentTime(0)
+        Menugtauto:pause():setCurrentTime(0)
     end
 
-    if mainMenu == 0 and menuState == 13 then
-        menugtauto:play()
+    if MainMenu == 0 and MenuState == 13 then
+        Menugtauto:play()
     else
-        menugtauto:pause():setCurrentTime(0)
+        Menugtauto:pause():setCurrentTime(0)
     end
 
-    if mainMenu == 0 then
+    if MainMenu == 0 then
 
         if car.speedKmh < 5 then
             --physics.setCarNoInput(true)
         end
 
-        if menuMusicsSelector == 0 and menuState ~= 13 then
-            menu0:play()
-        elseif menuMusicsSelector == 1 and menuState ~= 13 then
-            menu1:play()
-        elseif menuMusicsSelector == 2 and menuState ~= 13 then
-            menu2:play()
-        elseif menuMusicsSelector == 3 and menuState ~= 13 then
-            menu3:play()
-        elseif menuMusicsSelector == 4 and menuState ~= 13 then
-            menu4:play()
+        if MenuMusicsSelector == 0 and MenuState ~= 13 then
+            Menu0:play()
+        elseif MenuMusicsSelector == 1 and MenuState ~= 13 then
+            Menu1:play()
+        elseif MenuMusicsSelector == 2 and MenuState ~= 13 then
+            Menu2:play()
+        elseif MenuMusicsSelector == 3 and MenuState ~= 13 then
+            Menu3:play()
+        elseif MenuMusicsSelector == 4 and MenuState ~= 13 then
+            Menu4:play()
         else
-            menu0:pause():setCurrentTime(0)
-            menu1:pause():setCurrentTime(0)
-            menu2:pause():setCurrentTime(0)
-            menu3:pause():setCurrentTime(0)
-            menu4:pause():setCurrentTime(0)
+            Menu0:pause():setCurrentTime(0)
+            Menu1:pause():setCurrentTime(0)
+            Menu2:pause():setCurrentTime(0)
+            Menu3:pause():setCurrentTime(0)
+            Menu4:pause():setCurrentTime(0)
         end
 
-
-        if  menuState == 0 then
         
-            ui.toolWindow('Main Menu', vec2(0, 0), vec2(1920,1080), function ()
+
+        if MenuState == 0 then
+        
+            ui.transparentWindow('Main Menu', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
-                ui.childWindow('mainmenu', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+                ui.childWindow('MainMenu', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
 
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -2007,10 +2148,10 @@ function script.drawUI()
                     for i = 22, simstate.carsCount do
                         playerCarStates = ac.getCarState(i)
                         if playerCarStates ~= nil and playerCarStates.isConnected then
-                            carArrayX[i] = playerCarStates.position.x
-                            carArrayZ[i] = playerCarStates.position.z
-                            if carArrayX[i] ~= 0 then
-                                ui.drawCircle(vec2((1920 / 2) +  carArrayX[i] / 33 + 22, (1080 / 2) +  carArrayZ[i] / 33 -50), 5, rgbm(0.6,0,1,1), 30, 15)
+                            CarArrayX[i] = playerCarStates.position.x
+                            CarArrayZ[i] = playerCarStates.position.z
+                            if CarArrayX[i] ~= 0 then
+                                ui.drawCircle(vec2((1920 / 2) +  CarArrayX[i] / 33 + 22, (1080 / 2) +  CarArrayZ[i] / 33 -50), 5, rgbm(0.6,0,1,1), 30, 15)
                             end
                         end
                 
@@ -2056,7 +2197,7 @@ function script.drawUI()
                     ui.setCursorY(185)
 
                     if ui.invisibleButton('money', vec2(340,130)) then
-                        menuState = 4
+                        MenuState = 4
                     end
 
 
@@ -2085,7 +2226,7 @@ function script.drawUI()
                     ui.setCursorY(385)
 
                     if ui.invisibleButton('garage', vec2(340,130)) then
-                        menuState = 3
+                        MenuState = 3
                     end
 
                     ui.setCursorX(0)
@@ -2114,7 +2255,7 @@ function script.drawUI()
                     ui.setCursorY(586)
 
                     if ui.invisibleButton('services', vec2(340,130)) then
-                        menuState = 2
+                        MenuState = 2
                     end
 
 
@@ -2142,7 +2283,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('settings', vec2(340,130)) then
-                        menuState = 1
+                        MenuState = 1
                     end
 
                     ui.setCursorX(1920 - 450)
@@ -2170,7 +2311,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('menuquit', vec2(340,130)) then
-                        mainMenu = mainMenu + 1
+                        MainMenu = MainMenu + 1
                     end
 
 
@@ -2179,12 +2320,14 @@ function script.drawUI()
 
             end)
         
-        elseif menuState == 1 then
+        elseif MenuState == 1 then
 
-            ui.toolWindow('Settings', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('Settings', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('setting', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -2384,31 +2527,31 @@ function script.drawUI()
                     ui.setCursorX(195)
                     ui.setCursorY(630)
 
-                    if ui.button('    ', vec2(120,65)) and musicVolume < 100 then
-                        musicVolume = musicVolume + 5
+                    if ui.button('    ', vec2(120,65)) and MusicVolume < 100 then
+                        MusicVolume = MusicVolume + 5
                     end
 
                     ui.setCursorX(75)
                     ui.setCursorY(630)
 
-                    if ui.button('     ', vec2(120,65)) and musicVolume > 0 then
-                        musicVolume = musicVolume - 5
+                    if ui.button('     ', vec2(120,65)) and MusicVolume > 0 then
+                        MusicVolume = MusicVolume - 5
                     end
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(93 + 1)
                     ui.setCursorY(625 + 1)
-                    ui.textColored('<   ' .. musicVolume .. '   >', rgbm(0.1,0.8,1,0.7))
+                    ui.textColored('<   ' .. MusicVolume .. '   >', rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(93 + 0.5)
                     ui.setCursorY(625 + 0.5)
-                    ui.textColored('<   ' .. musicVolume .. '   >', rgbm(0.8,0,1,1))
+                    ui.textColored('<   ' .. MusicVolume .. '   >', rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(93)
                     ui.setCursorY(625)
-                    ui.textColored('<   ' .. musicVolume .. '   >', rgbm(0.8,0,1,1))
+                    ui.textColored('<   ' .. MusicVolume .. '   >', rgbm(0.8,0,1,1))
 
                     ui.setCursorX(400)
                     ui.setCursorY(440)
@@ -2447,7 +2590,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 0
+                        MenuState = 0
                     end
 
 
@@ -2456,12 +2599,14 @@ function script.drawUI()
 
             end)
 
-        elseif menuState == 2 then
+        elseif MenuState == 2 then
 
-            ui.toolWindow('Services', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('Services', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('service', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -2572,7 +2717,7 @@ function script.drawUI()
                     ui.setCursorY(185)
 
                     if ui.invisibleButton('tuningShop', vec2(340,210)) then
-                        menuState = 20
+                        MenuState = 20
                     end
 
                     ui.setCursorX(400)
@@ -2616,7 +2761,7 @@ function script.drawUI()
                     ui.setCursorY(435)
 
                     if ui.invisibleButton('dealershipservice', vec2(340,210)) then
-                        menuState = 12
+                        MenuState = 12
                     end
 
                     ui.setCursorX(400)
@@ -2749,7 +2894,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 0
+                        MenuState = 0
                     end
 
 
@@ -2758,12 +2903,14 @@ function script.drawUI()
 
             end)
 
-        elseif menuState == 3 then
+        elseif MenuState == 3 then
 
-            ui.toolWindow('ENGINES', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('ENGINES', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('Engine', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -2878,7 +3025,7 @@ function script.drawUI()
                     ui.setCursorY(185)
 
                     if ui.invisibleButton('cars', vec2(340,130)) then
-                        menuState = 15
+                        MenuState = 15
                     end
 
                     --- ENGINE ---
@@ -2908,7 +3055,7 @@ function script.drawUI()
                     ui.setCursorY(385)
 
                     if ui.invisibleButton('engine', vec2(340,130)) then
-                        menuState = 13
+                        MenuState = 13
                     end
 
 
@@ -2941,7 +3088,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 0
+                        MenuState = 0
                     end
 
 
@@ -2951,12 +3098,14 @@ function script.drawUI()
             end)
 
 
-        elseif menuState == 4 then
+        elseif MenuState == 4 then
 
-            ui.toolWindow('MONEYS', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('MONEYS', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('Money', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -3070,7 +3219,7 @@ function script.drawUI()
                     ui.setCursorY(185)
 
                     if ui.invisibleButton('transfer', vec2(340,130)) then
-                        menuState = 11
+                        MenuState = 11
                     end
 
 
@@ -3101,7 +3250,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 0
+                        MenuState = 0
                     end
 
 
@@ -3110,12 +3259,14 @@ function script.drawUI()
 
             end)
 
-        elseif menuState == 11 then
+        elseif MenuState == 11 then
 
-            ui.toolWindow('TRANSFER', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('TRANSFER', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('Transfers', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -3437,17 +3588,17 @@ function script.drawUI()
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(1080/2 + 175)
                     ui.setCursorY(437 + 2)
-                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.1,0.8,1,0.7))
+                    ui.textColored(ac.getDriverName(TransferPersonType), rgbm(0.1,0.8,1,0.7))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(1080/2 + 175)
                     ui.setCursorY(437 + 1)
-                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
+                    ui.textColored(ac.getDriverName(TransferPersonType), rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(1080/2 + 175)
                     ui.setCursorY(437)
-                    ui.textColored(ac.getDriverName(transferPersonType), rgbm(0.8,0,1,1))
+                    ui.textColored(ac.getDriverName(TransferPersonType), rgbm(0.8,0,1,1))
 
                     ui.pushFont(ui.Font.Huge)
                     ui.setCursorX(1080/2 + 300 + 2)
@@ -3459,18 +3610,18 @@ function script.drawUI()
 
                     --22
 
-                    if transferPersonType < simstate.connectedCars - 1 then
+                    if TransferPersonType < simstate.connectedCars - 1 then
                         if ui.invisibleButton('next', vec2(200,100)) then
-                            transferPersonType = transferPersonType + 1
+                            TransferPersonType = TransferPersonType + 1
                         end
                     end
 
                     ui.setCursorX(1080/2 + 150)
                     ui.setCursorY(525 + 2)
 
-                    if transferPersonType > 0 then
+                    if TransferPersonType > 0 then
                         if ui.invisibleButton('previous', vec2(250,100)) then
-                            transferPersonType = transferPersonType - 1
+                            TransferPersonType = TransferPersonType - 1
                         end
                     end
 
@@ -3518,7 +3669,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 4
+                        MenuState = 4
                     end
 
 
@@ -3528,12 +3679,14 @@ function script.drawUI()
             end)
 
 
-        elseif menuState == 12 then
+        elseif MenuState == 12 then
 
-            ui.toolWindow('DEALERSHIP', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('DEALERSHIP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('Dealership', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -3638,15 +3791,15 @@ function script.drawUI()
                     ui.setCursorX(1539)
                     ui.setCursorY(313)
 
-                    if ui.button('     ', vec2(221,75), ui.ButtonFlags.Repeat) and usedMarketScroll > -6700 then
-                        usedMarketScroll = usedMarketScroll - 10
+                    if ui.button('     ', vec2(221,75), ui.ButtonFlags.Repeat) and UsedMarketScroll > -6700 then
+                        UsedMarketScroll = UsedMarketScroll - 10
                     end
 
                     ui.setCursorX(1539)
                     ui.setCursorY(213)
 
-                    if ui.button('    ', vec2(221,75), ui.ButtonFlags.Repeat) and usedMarketScroll < 0 then
-                        usedMarketScroll = usedMarketScroll + 10
+                    if ui.button('    ', vec2(221,75), ui.ButtonFlags.Repeat) and UsedMarketScroll < 0 then
+                        UsedMarketScroll = UsedMarketScroll + 10
                     end
                     
                     if loadCheckTimer + 3 < os.clock() then
@@ -3654,63 +3807,63 @@ function script.drawUI()
                         for i = 1, 50 do
 
                         
-                            if 80 + (i * 150) + usedMarketScroll > 180 and 80 + (i * 150) + usedMarketScroll < 1000 then
+                            if 80 + (i * 150) + UsedMarketScroll > 180 and 80 + (i * 150) + UsedMarketScroll < 1000 then
 
                                 
                                 ui.setCursorX(60)
-                                ui.setCursorY(-515 + (i * 150) + usedMarketScroll)
+                                ui.setCursorY(-515 + (i * 150) + UsedMarketScroll)
                                 ui.dwriteTextAligned(usedMarket[i] [0], 30, ui.Alignment.Start, ui.Alignment.Center, 1200, false, rgbm(0.5,0.2,0.2,1))
                             end
 
-                            if 200 + (i * 150) + usedMarketScroll > 180 and 200 + (i * 150) + usedMarketScroll < 1000 then
+                            if 200 + (i * 150) + UsedMarketScroll > 180 and 200 + (i * 150) + UsedMarketScroll < 1000 then
 
-                                ui.drawLine(vec2(50,200 + (i * 150) + usedMarketScroll), vec2(1400,200 + (i * 150) + usedMarketScroll), rgbm(0.2,0.2,0.2,0.4), 5)
+                                ui.drawLine(vec2(50,200 + (i * 150) + UsedMarketScroll), vec2(1400,200 + (i * 150) + UsedMarketScroll), rgbm(0.2,0.2,0.2,0.4), 5)
                             
                             end
 
-                            if 115 + (i * 150) + usedMarketScroll > 180 and 115 + (i * 150) + usedMarketScroll < 1000 then
+                            if 115 + (i * 150) + UsedMarketScroll > 180 and 115 + (i * 150) + UsedMarketScroll < 1000 then
                                 ui.pushFont(ui.Font.Title)
                                 ui.setCursorX(100)
-                                ui.setCursorY(115 + (i * 150) + usedMarketScroll)
+                                ui.setCursorY(115 + (i * 150) + UsedMarketScroll)
                                 ui.textColored('Color: ' .. usedMarket[i] [2], rgbm(0.2,0.2,0.2,0.85))
                             end
 
-                            if 150 + (i * 150) + usedMarketScroll > 180 and 150 + (i * 150) + usedMarketScroll < 1000 then
+                            if 150 + (i * 150) + UsedMarketScroll > 180 and 150 + (i * 150) + UsedMarketScroll < 1000 then
                                 ui.pushFont(ui.Font.Title)
                                 ui.setCursorX(100)
-                                ui.setCursorY(150 + (i * 150) + usedMarketScroll)
+                                ui.setCursorY(150 + (i * 150) + UsedMarketScroll)
                                 ui.textColored('Transmission: ' .. usedMarket[i] [1], rgbm(0.2,0.2,0.2,0.85))
                             end
 
-                            if 139 + (i * 150) + usedMarketScroll > 180 and 139 + (i * 150) + usedMarketScroll < 1000 then
+                            if 139 + (i * 150) + UsedMarketScroll > 180 and 139 + (i * 150) + UsedMarketScroll < 1000 then
                                 ui.pushFont(ui.Font.Huge)
                                 ui.setCursorX(800)
-                                ui.setCursorY(-11 + (i * 150) + usedMarketScroll)
+                                ui.setCursorY(-11 + (i * 150) + UsedMarketScroll)
                                 ui.dwriteTextAligned(usedMarket[i] [3] .. ' cr', 55, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.1,0.1,1))
                                 ui.setCursorX(801)
-                                ui.setCursorY(-10 + (i * 150) + usedMarketScroll)
+                                ui.setCursorY(-10 + (i * 150) + UsedMarketScroll)
                                 ui.dwriteTextAligned(usedMarket[i] [3] .. ' cr', 55, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.1,0.1,1))
                             end
 
-                            if 130 + (i * 150) + usedMarketScroll > 180 and 130 + (i * 150) + usedMarketScroll < 1000  then
-                                ui.drawLine(vec2(1153,153 + (i * 150) + usedMarketScroll), vec2(1383,153 + (i * 150) + usedMarketScroll), rgbm(0.1,0,0.2,0.2), 65)
+                            if 130 + (i * 150) + UsedMarketScroll > 180 and 130 + (i * 150) + UsedMarketScroll < 1000  then
+                                ui.drawLine(vec2(1153,153 + (i * 150) + UsedMarketScroll), vec2(1383,153 + (i * 150) + UsedMarketScroll), rgbm(0.1,0,0.2,0.2), 65)
 
                             end
 
-                            if 130 + (i * 150) + usedMarketScroll > 180 and 130 + (i * 150) + usedMarketScroll < 1000 then
+                            if 130 + (i * 150) + UsedMarketScroll > 180 and 130 + (i * 150) + UsedMarketScroll < 1000 then
                                 ui.setCursorX(1170)
-                                ui.setCursorY(-450 + (i * 150) + usedMarketScroll)
+                                ui.setCursorY(-450 + (i * 150) + UsedMarketScroll)
                                 ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.Start, ui.Alignment.Center, 1200, false, rgbm(0.4,0.1,0.8,1))
 
                             end
 
-                            if 120 + (i * 150) + usedMarketScroll > 180 and 120 + (i * 150) + usedMarketScroll < 1000 then
+                            if 120 + (i * 150) + UsedMarketScroll > 180 and 120 + (i * 150) + UsedMarketScroll < 1000 then
                                 ui.setCursorX(1150)
-                                ui.setCursorY(120 + (i * 150) + usedMarketScroll)
+                                ui.setCursorY(120 + (i * 150) + UsedMarketScroll)
 
                                 if ui.invisibleButton('purchasecar' .. tostring(i), vec2(230,65)) then
                                     confirmCarPurchase = true
-                                    confirmCarPurchaseIndex = i
+                                    ConfirmCarPurchaseIndex = i
                                 end
                             
                             end
@@ -3746,10 +3899,10 @@ function script.drawUI()
                         ui.setCursorX(1520)
                         ui.setCursorY(595)
 
-                        if ui.invisibleButton('conformCarPurchaseYes', vec2(125,65)) and money - tonumber(usedMarket[confirmCarPurchaseIndex] [3]) > 0 then
+                        if ui.invisibleButton('conformCarPurchaseYes', vec2(125,65)) and money - tonumber(usedMarket[ConfirmCarPurchaseIndex] [3]) > 0 then
                             checkListingsTimer = false
                             checkListingsClock = os.clock()
-                            money = money - tonumber(usedMarket[confirmCarPurchaseIndex] [3])
+                            money = money - tonumber(usedMarket[ConfirmCarPurchaseIndex] [3])
                             carCollectionState[carCollectionAmount] = {}
                             carCollectionState[carCollectionAmount] [0] = 'empty' -- folderName
                             carCollectionState[carCollectionAmount] [1] = tostring(10) -- fuel
@@ -3761,13 +3914,13 @@ function script.drawUI()
                             carCollectionState[carCollectionAmount] [7] = tostring(100) -- oilAmount
                             carCollectionState[carCollectionAmount] [8] = tostring(100) -- oilQuality
                             if #carModifications == 0 then
-                                carModifications = {{usedMarket[confirmCarPurchaseIndex][0], 0}}
+                                carModifications = {{usedMarket[ConfirmCarPurchaseIndex][0], 0}}
                             else
-                                carModifications [carCollectionAmount + 1] = {usedMarket[confirmCarPurchaseIndex][0], 0}
+                                carModifications [carCollectionAmount + 1] = {usedMarket[ConfirmCarPurchaseIndex][0], 0}
                             end
-                            carCollection[carCollectionAmount] = usedMarket[confirmCarPurchaseIndex]
+                            carCollection[carCollectionAmount] = usedMarket[ConfirmCarPurchaseIndex]
                             carCollectionAmount = carCollectionAmount + 1
-                            usedMarketExpires[confirmCarPurchaseIndex] = tostring(10)
+                            usedMarketExpires[ConfirmCarPurchaseIndex] = tostring(10)
                             confirmCarPurchase = false
                         end
 
@@ -3786,12 +3939,12 @@ function script.drawUI()
                         ui.pushFont(ui.Font.Title)
                         ui.setCursorX(1520)
                         ui.setCursorY(520)
-                        ui.textColored(string.sub(usedMarket[confirmCarPurchaseIndex] [0], 0, 31), rgbm(0.4,0.5,1,1))
+                        ui.textColored(string.sub(usedMarket[ConfirmCarPurchaseIndex] [0], 0, 31), rgbm(0.4,0.5,1,1))
                         
                         ui.pushFont(ui.Font.Title)
                         ui.setCursorX(1520)
                         ui.setCursorY(545)
-                        ui.textColored(string.sub(usedMarket[confirmCarPurchaseIndex] [0], 32, 63), rgbm(0.4,0.5,1,1))
+                        ui.textColored(string.sub(usedMarket[ConfirmCarPurchaseIndex] [0], 32, 63), rgbm(0.4,0.5,1,1))
                         
                     end
                     
@@ -3823,7 +3976,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 2
+                        MenuState = 2
                     end
 
 
@@ -3832,12 +3985,14 @@ function script.drawUI()
 
             end)
 
-        elseif menuState == 13 then
+        elseif MenuState == 13 then
 
-            ui.toolWindow('ENGINES', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('ENGINES', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('Engine', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -3925,7 +4080,7 @@ function script.drawUI()
                     ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
 
 
-                    if not sticktoggled then
+                    if not Sticktoggled then
 
                         --- STARTSTOP ---
                         
@@ -3968,11 +4123,11 @@ function script.drawUI()
                         ui.setCursorX(60.7)
                         ui.setCursorY(267)
     
-                        if ui.invisibleButton('CHECK OIL', vec2(150,80)) and not oilSnapped then
-                            sticktoggled = true
+                        if ui.invisibleButton('CHECK OIL', vec2(150,80)) and not OilSnapped then
+                            Sticktoggled = true
                         end
     
-                        if oilcaptoggled then
+                        if Oilcaptoggled then
     
                             ui.drawCircle(vec2(250,280), 10, rgbm(0.02,0.02,0.02,1), 40, 20)
                             ui.drawCircle(vec2(250,280), 22, rgbm(0.07,0.07,0.07,1), 40, 8)
@@ -3985,7 +4140,7 @@ function script.drawUI()
                                 ui.drawCircle(vec2(250,280), 10, rgbm(0.32,0.32,0,(math.abs(150 - math.max(150, oilAmount)))/150 * 5), 40, math.max(20, oilAmount - 130))
                             end
     
-                            if oilSnapped then
+                            if OilSnapped then
                                 ui.setCursorX(ui.mouseLocalPos().x - 40)
                                 ui.setCursorY(ui.mouseLocalPos().y - 60)
                             else
@@ -3995,14 +4150,14 @@ function script.drawUI()
     
                             ui.image('https://static.vecteezy.com/system/resources/previews/009/381/185/non_2x/motor-oil-bottle-clipart-design-illustration-free-png.png',vec2(100,140))
     
-                            if oilSnapped then
+                            if OilSnapped then
     
                                 ui.setCursorX(235)
                                 ui.setCursorY(295)
                                 ui.invisibleButton('OIL FILL', vec2(80,270))
     
                                 if ui.itemHovered() and oilAmount < 170 then
-                                    oilPouring = true
+                                    OilPouring = true
                                     ui.setCursorX(ui.mouseLocalPos().x - 150)
                                     ui.setCursorY(ui.mouseLocalPos().y - 50)
                                     ui.drawCircle(vec2(ui.mouseLocalPos().x - 23,ui.mouseLocalPos().y - 75), 5, rgbm(0.32,0.32,0,1), 40, 15)
@@ -4013,20 +4168,20 @@ function script.drawUI()
                                         oilQuality = oilQuality + 0.02
                                     end
                                 else
-                                    oilPouring = false
+                                    OilPouring = false
                                 end
     
                                 ui.setCursorX(ui.mouseLocalPos().x - 40)
                                 ui.setCursorY(ui.mouseLocalPos().y - 60)
-                                if ui.invisibleButton('OIL BOTTLE', vec2(110,340)) and not oilPouring then
-                                    oilSnapped = false
+                                if ui.invisibleButton('OIL BOTTLE', vec2(110,340)) and not OilPouring then
+                                    OilSnapped = false
                                 end
     
                             else
                                 ui.setCursorX(795)
                                 ui.setCursorY(600)
                                 if ui.invisibleButton('OIL BOTTLE', vec2(110,340)) then
-                                    oilSnapped = true
+                                    OilSnapped = true
                                 end
                             end
     
@@ -4052,10 +4207,10 @@ function script.drawUI()
                         ui.setCursorY(220)
     
                         if ui.invisibleButton('OIL', vec2(120,320)) then
-                            if oilcaptoggled then
-                                oilcaptoggled = false
+                            if Oilcaptoggled then
+                                Oilcaptoggled = false
                             else
-                                oilcaptoggled = true
+                                Oilcaptoggled = true
                             end
                         end
 
@@ -4067,15 +4222,15 @@ function script.drawUI()
                         ui.setCursorY(230)
     
                         if ui.invisibleButton('OIL DRAIN', vec2(90,310)) then
-                            if oilDraining or oilAmount < 0.1 then
-                                oilDraining = false
+                            if OilDraining or oilAmount < 0.1 then
+                                OilDraining = false
                             else
-                                oilDraining = true
+                                OilDraining = true
                                 
                             end
                         end
     
-                        if oilDraining then
+                        if OilDraining then
                             ui.setCursorX(351)
                             ui.setCursorY(310)
                             ui.textColored('DRAINING...', rgbm(0.0,0.0,0.0,1)) 
@@ -4086,8 +4241,8 @@ function script.drawUI()
                             ui.textColored('DRAIN', rgbm(0.0,0.0,0.0,1))    
                         end
     
-                        if oilAmount < 0.1 and oilDraining then
-                            oilDraining = false
+                        if oilAmount < 0.1 and OilDraining then
+                            OilDraining = false
                             oilAmount = 0
                             oilQuality = 100
                         end
@@ -4101,52 +4256,52 @@ function script.drawUI()
                     
                     end
     
-                    if sticktoggled then
+                    if Sticktoggled then
                         
-                        ui.drawLine(vec2(100,300), vec2(600,300), stickColor, 40)
-                        ui.drawTriangle(vec2(600,300.5), vec2(600,300.5), vec2(680,300.5), stickColor, 40)
-                        ui.drawLine(vec2(630,300), vec2(730,300), stickColor, 10)
+                        ui.drawLine(vec2(100,300), vec2(600,300), StickColor, 40)
+                        ui.drawTriangle(vec2(600,300.5), vec2(600,300.5), vec2(680,300.5), StickColor, 40)
+                        ui.drawLine(vec2(630,300), vec2(730,300), StickColor, 10)
     
                         -- markers
     
                         ui.pushFont(ui.Font.Title)
                         ui.setCursorX(275)
                         ui.setCursorY(287)
-                        ui.textColored('MAX',stickColorGroove)
-                        ui.drawLine(vec2(560,280), vec2(560,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(320,280), vec2(320,320), stickColorGroove, 2)
+                        ui.textColored('MAX',StickColorGroove)
+                        ui.drawLine(vec2(560,280), vec2(560,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(320,280), vec2(320,320), StickColorGroove, 2)
     
                         -- detail lines
     
-                        ui.drawLine(vec2(320,300), vec2(340,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(320,300), vec2(340,280), stickColorGroove, 2)
+                        ui.drawLine(vec2(320,300), vec2(340,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(320,300), vec2(340,280), StickColorGroove, 2)
     
-                        ui.drawLine(vec2(320,280), vec2(360,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(340,280), vec2(380,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(360,280), vec2(400,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(380,280), vec2(420,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(400,280), vec2(440,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(420,280), vec2(460,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(440,280), vec2(480,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(460,280), vec2(500,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(480,280), vec2(520,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(500,280), vec2(540,320), stickColorGroove, 2)
-                        ui.drawLine(vec2(520,280), vec2(560,320), stickColorGroove, 2)
+                        ui.drawLine(vec2(320,280), vec2(360,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(340,280), vec2(380,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(360,280), vec2(400,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(380,280), vec2(420,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(400,280), vec2(440,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(420,280), vec2(460,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(440,280), vec2(480,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(460,280), vec2(500,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(480,280), vec2(520,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(500,280), vec2(540,320), StickColorGroove, 2)
+                        ui.drawLine(vec2(520,280), vec2(560,320), StickColorGroove, 2)
     
-                        ui.drawLine(vec2(320,320), vec2(360,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(340,320), vec2(380,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(360,320), vec2(400,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(380,320), vec2(420,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(400,320), vec2(440,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(420,320), vec2(460,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(440,320), vec2(480,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(460,320), vec2(500,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(480,320), vec2(520,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(500,320), vec2(540,280), stickColorGroove, 2)
-                        ui.drawLine(vec2(520,320), vec2(560,280), stickColorGroove, 2)
+                        ui.drawLine(vec2(320,320), vec2(360,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(340,320), vec2(380,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(360,320), vec2(400,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(380,320), vec2(420,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(400,320), vec2(440,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(420,320), vec2(460,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(440,320), vec2(480,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(460,320), vec2(500,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(480,320), vec2(520,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(500,320), vec2(540,280), StickColorGroove, 2)
+                        ui.drawLine(vec2(520,320), vec2(560,280), StickColorGroove, 2)
     
-                        ui.drawLine(vec2(540,320), vec2(560,300), stickColorGroove, 2)
-                        ui.drawLine(vec2(540,280), vec2(560,300), stickColorGroove, 2)
+                        ui.drawLine(vec2(540,320), vec2(560,300), StickColorGroove, 2)
+                        ui.drawLine(vec2(540,280), vec2(560,300), StickColorGroove, 2)
     
     
     
@@ -4158,7 +4313,7 @@ function script.drawUI()
                         ui.setCursorY(270)
     
                         if ui.invisibleButton('CHECK OIL', vec2(650,260)) then
-                            sticktoggled = false
+                            Sticktoggled = false
                         end
     
                     end
@@ -4193,7 +4348,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 3
+                        MenuState = 3
                     end
 
 
@@ -4203,12 +4358,14 @@ function script.drawUI()
             end)
 
 
-        elseif menuState == 15 then
+        elseif MenuState == 15 then
 
-            ui.toolWindow('CARS', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('CARS', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('Cars', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -4313,18 +4470,18 @@ function script.drawUI()
                         ui.drawLine(vec2(770,550), vec2(1130,550), rgbm(0.4,0.3,0.7,0.1), 175)
                         ui.drawLine(vec2(780,550), vec2(1120,550), rgbm(0.15,0.0,0.5,0.4), 155)
 
-                        if displayGarageCars then
+                        if DisplayGarageCars then
                             ui.setCursorX(350)
                             ui.setCursorY(230)
-                            ui.dwriteTextAligned(carCollection[garageCarCycle] [0], 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
+                            ui.dwriteTextAligned(carCollection[GarageCarCycle] [0], 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
         
                             ui.setCursorX(336)
                             ui.setCursorY(295)
-                            ui.dwriteTextAligned(carCollection[garageCarCycle] [2], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.5,0.8,1,1))
+                            ui.dwriteTextAligned(carCollection[GarageCarCycle] [2], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.5,0.8,1,1))
         
                             ui.setCursorX(336)
                             ui.setCursorY(340)
-                            ui.dwriteTextAligned(carCollection[garageCarCycle] [1], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.5,0.8,1,1))
+                            ui.dwriteTextAligned(carCollection[GarageCarCycle] [1], 20, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(0.5,0.8,1,1))
         
                             ui.setCursorX(1612)
                             ui.setCursorY(530)
@@ -4340,7 +4497,7 @@ function script.drawUI()
         
                             ui.setCursorX(350)
                             ui.setCursorY(560)
-                            ui.dwriteTextAligned('(' .. math.round(carCollection[garageCarCycle] [3] / 2, 0) .. ')', 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,0,0,0.8))
+                            ui.dwriteTextAligned('(' .. math.round(carCollection[GarageCarCycle] [3] / 2, 0) .. ')', 30, ui.Alignment.Center, ui.Alignment.Start, 1200, false, rgbm(1,0,0,0.8))
         
                         end
 
@@ -4348,10 +4505,11 @@ function script.drawUI()
                         ui.setCursorY(513)
 
                         if ui.button('        ', vec2(221,75), ui.ButtonFlags.Repeat) then
-                            if garageCarCycle < carCollectionAmount - 1 then
-                                garageCarCycle = garageCarCycle + 1
+                            CarmodsPage = 0
+                            if GarageCarCycle < carCollectionAmount - 1 then
+                                GarageCarCycle = GarageCarCycle + 1
                             else
-                                garageCarCycle = 0
+                                GarageCarCycle = 0
                             end
                         end
 
@@ -4359,10 +4517,11 @@ function script.drawUI()
                         ui.setCursorY(613)
 
                         if ui.button('       ', vec2(221,75), ui.ButtonFlags.Repeat) then
-                            if garageCarCycle == 0 then
-                                garageCarCycle = carCollectionAmount - 1
+                            CarmodsPage = 0
+                            if GarageCarCycle == 0 then
+                                GarageCarCycle = carCollectionAmount - 1
                             else
-                                garageCarCycle = garageCarCycle - 1
+                                GarageCarCycle = GarageCarCycle - 1
                             end
                         end
 
@@ -4370,7 +4529,7 @@ function script.drawUI()
                         ui.setCursorY(473)
 
                         if ui.button('         ', vec2(341,155), ui.ButtonFlags.Repeat) then
-                            sellCarCheck = true
+                            SellCarCheck = true
                         end
 
                     else
@@ -4388,10 +4547,42 @@ function script.drawUI()
                     ui.setCursorX(230)
                     ui.setCursorY(490)
                     ui.dwriteTextAligned('MODIFICATIONS', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
-        
 
+                    if loadCheckTimer + 3 < os.clock() and carCollectionAmount > 0 then
 
-                    if sellCarCheck then
+                        if (CarmodsPage * 14) + carModifications[GarageCarCycle + 1] [2] - 1 > 14 * (CarmodsPage + 1) then
+                            ui.drawLine(vec2(250,1030), vec2(450,1030), rgbm(0.4,0.3,0.7,0.1), 75)
+                            ui.drawLine(vec2(260,1030), vec2(440,1030), rgbm(0.4,0.3,0.7,0.1), 65)
+
+                            ui.setCursorX(315)
+                            ui.setCursorY(1010)
+                            ui.dwriteTextAligned('NEXT', 30, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.9,0.3,1,1))
+
+                            ui.setCursorX(250)
+                            ui.setCursorY(992)
+
+                            if ui.button('              ', vec2(200,75), ui.ButtonFlags.Repeat) then
+                                if (CarmodsPage + 1) * 14 < carModifications[GarageCarCycle + 1] [2] - 1  then
+                                    CarmodsPage = CarmodsPage + 1
+                                else
+                                    CarmodsPage = 0
+                                end
+                                
+                            end
+
+                        end
+
+                        for i = 0, 14 do
+                            if carModifications[GarageCarCycle + 1] [(CarmodsPage * 14 * 2) + i * 2 + 3] ~= nil then
+                                ui.setCursorX(70)
+                                ui.setCursorY(530 + i * 30)
+                                ui.dwriteTextAligned(carModifications[GarageCarCycle + 1] [(CarmodsPage * 14 * 2) + (i * 2 + 3)] .. ' : ' .. carModifications[GarageCarCycle + 1] [(CarmodsPage * 14 * 2) + (i * 2 + 4)], 18, ui.Alignment.Start, ui.Alignment.Start, 1200, false, rgbm(0.5,0.8,1,1))
+                            end
+                        end
+                    end
+
+                    if SellCarCheck then
+                        CarmodsPage = 0
 
                         ui.drawLine(vec2(770,745), vec2(1130,745), rgbm(0.4,0.3,0.7,0.1), 205)
 
@@ -4417,34 +4608,37 @@ function script.drawUI()
                         ui.setCursorY(733)
 
                         if ui.button('          ', vec2(141,105), ui.ButtonFlags.Repeat) then
-                            sellCarCheck = false
-                            displayGarageCars = false
-                            money = money + tonumber(math.round(carCollection[garageCarCycle] [3] / 2, 0))
-                            for i = garageCarCycle + 1, carCollectionAmount - 1 do
-                                carCollection[i] = carCollection[i + 1]
+                            CarmodsPage = 0
+                            DisplayGarageCars = false
+                            money = money + tonumber(math.round(carCollection[GarageCarCycle] [3] / 2, 0))
+                            for i = GarageCarCycle + 1, carCollectionAmount - 1 do
+                                carCollection[i - 1] = carCollection[i]
                                 carModifications[i] = carModifications[i + 1]
                                 carModificationsAmount[i] = carModificationsAmount[i + 1]
                             end
-                            garageCarCycle = garageCarCycle - 1
-                            carCollection[carCollectionAmount] = nil
+                            if GarageCarCycle > 0 then
+                                GarageCarCycle = GarageCarCycle - 1
+                            end
+                            carCollection[carCollectionAmount - 1] = nil
                             carModifications[carCollectionAmount] = nil
                             carModificationsAmount[carCollectionAmount] = nil
                             carCollectionAmount = carCollectionAmount - 1
-                            displayGarageCarsTimer = os.clock()
+                            DisplayGarageCarsTimer = os.clock()
+                            SellCarCheck = false
                         end
 
                         ui.setCursorX(979)
                         ui.setCursorY(733)
 
                         if ui.button('           ', vec2(141,105), ui.ButtonFlags.Repeat) then
-                            sellCarCheck = false
+                            SellCarCheck = false
                         end
                     end
 
                     
-                    if not displayGarageCars and displayGarageCarsTimer + 0.01 < os.clock() then
-                        garageCarCycle = 0
-                        displayGarageCars = true
+                    if not DisplayGarageCars and DisplayGarageCarsTimer + 0.01 < os.clock() then
+                        GarageCarCycle = 0
+                        DisplayGarageCars = true
                     end
 
 
@@ -4475,7 +4669,8 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 3
+                        CarmodsPage = 0
+                        MenuState = 3
                     end
 
 
@@ -4484,12 +4679,14 @@ function script.drawUI()
 
             end)
 
-        elseif menuState == 20 then
+        elseif MenuState == 20 then
 
-            ui.toolWindow('TUNING SHOP', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('TUNING SHOP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('TuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -4681,26 +4878,26 @@ function script.drawUI()
                         ui.pushFont(ui.Font.Huge)
                         ui.setCursorX(125)
                         ui.setCursorY(220)
-                        ui.dwriteTextAligned(carCollection[garageCarCycle][0], 32, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(1,0.2,0.1,1))
+                        ui.dwriteTextAligned(carCollection[GarageCarCycle][0], 32, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(1,0.2,0.1,1))
 
                         ui.pushFont(ui.Font.Huge)
                         ui.setCursorX(475)
                         ui.setCursorY(265)
-                        ui.dwriteTextAligned(carCollection[garageCarCycle][2], 23, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,1))
+                        ui.dwriteTextAligned(carCollection[GarageCarCycle][2], 23, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,1))
 
                         ui.pushFont(ui.Font.Huge)
                         ui.setCursorX(475)
                         ui.setCursorY(305)
-                        ui.dwriteTextAligned(carCollection[garageCarCycle][1], 23, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,1))
+                        ui.dwriteTextAligned(carCollection[GarageCarCycle][1], 23, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.8,0.8,0.8,1))
 
                         ui.setCursorX(120)
                         ui.setCursorY(870)
 
                         if ui.button('PREV.', vec2(180,80)) then
-                            if garageCarCycle == 0 then
-                                garageCarCycle = carCollectionAmount - 1
+                            if GarageCarCycle == 0 then
+                                GarageCarCycle = carCollectionAmount - 1
                             else
-                                garageCarCycle = garageCarCycle - 1
+                                GarageCarCycle = GarageCarCycle - 1
                             end
                         end
 
@@ -4708,10 +4905,10 @@ function script.drawUI()
                         ui.setCursorY(870)
 
                         if ui.button('NEXT', vec2(180,80)) then
-                            if garageCarCycle < carCollectionAmount - 1 then
-                                garageCarCycle = garageCarCycle + 1
+                            if GarageCarCycle < carCollectionAmount - 1 then
+                                GarageCarCycle = GarageCarCycle + 1
                             else
-                                garageCarCycle = 0
+                                GarageCarCycle = 0
                             end
                         end
 
@@ -4728,56 +4925,56 @@ function script.drawUI()
                     ui.setCursorY(235)
 
                     if ui.button(' ', vec2(160,140)) then
-                        menuState = 21
+                        MenuState = 21
                     end
 
                     ui.setCursorX(520)
                     ui.setCursorY(235)
 
                     if ui.button('  ', vec2(160,140)) then
-                        menuState = 22
+                        MenuState = 22
                     end
 
                     ui.setCursorX(920)
                     ui.setCursorY(235)
 
                     if ui.button('   ', vec2(160,140)) then
-                        menuState = 23
+                        MenuState = 23
                     end
 
                     ui.setCursorX(1320)
                     ui.setCursorY(235)
 
                     if ui.button('    ', vec2(160,140)) then
-                        menuState = 24
+                        MenuState = 24
                     end
 
                     ui.setCursorX(120)
                     ui.setCursorY(485)
 
                     if ui.button('     ', vec2(160,140)) then
-                        menuState = 25
+                        MenuState = 25
                     end
 
                     ui.setCursorX(520)
                     ui.setCursorY(485)
 
                     if ui.button('      ', vec2(160,140)) then
-                        menuState = 26
+                        MenuState = 26
                     end
 
                     ui.setCursorX(920)
                     ui.setCursorY(485)
 
                     if ui.button('       ', vec2(160,140)) then
-                        menuState = 27
+                        MenuState = 27
                     end
 
                     ui.setCursorX(1320)
                     ui.setCursorY(485)
 
                     if ui.button('        ', vec2(160,140)) then
-                        menuState = 28
+                        MenuState = 28
                     end
 
                     --- BACK ---
@@ -4807,7 +5004,7 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 2
+                        MenuState = 2
                     end
 
 
@@ -4817,12 +5014,14 @@ function script.drawUI()
             end)
 
 
-        elseif menuState == 21 then
+        elseif MenuState == 21 then
 
-            ui.toolWindow('BODY TUNING SHOP', vec2(0, 0), vec2(1920,1080), function ()
+            ui.transparentWindow('BODY TUNING SHOP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
 
                 ui.pushFont(ui.Font.Huge)
                 ui.childWindow('BodyTuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
 
                     ui.setCursorX(100)
                     ui.setCursorY(-40)
@@ -4961,31 +5160,31 @@ function script.drawUI()
                     ui.setCursorY(235)
 
                     if ui.button(' ', vec2(160,140)) then
-                        menuBodyStage = 0
+                        MenuBodyStage = 0
                     end
 
                     ui.setCursorX(520)
                     ui.setCursorY(235)
 
                     if ui.button('  ', vec2(160,140)) then
-                        menuBodyStage = 1
+                        MenuBodyStage = 1
                     end
 
                     ui.setCursorX(920)
                     ui.setCursorY(235)
 
                     if ui.button('   ', vec2(160,140)) then
-                        menuBodyStage = 2
+                        MenuBodyStage = 2
                     end
 
                     ui.setCursorX(1320)
                     ui.setCursorY(235)
 
                     if ui.button('    ', vec2(160,140)) then
-                        menuBodyStage = 3
+                        MenuBodyStage = 3
                     end
 
-                    if menuBodyStage == 0 then
+                    if MenuBodyStage == 0 then
                         ui.pushFont(ui.Font.Huge)
                         ui.setCursorX(125)
                         ui.setCursorY(175)
@@ -5001,7 +5200,7 @@ function script.drawUI()
                         ui.setCursorY(215)
                         ui.dwriteTextAligned('Typically popular in convertibles, a roll bar provides protection for possible roll overs and can help stiffen the chassis somewhat.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
                     
-                    elseif menuBodyStage == 1 then
+                    elseif MenuBodyStage == 1 then
                         ui.pushFont(ui.Font.Huge)
                         ui.setCursorX(125)
                         ui.setCursorY(175)
@@ -5022,7 +5221,7 @@ function script.drawUI()
                         ui.setCursorY(245)
                         ui.dwriteTextAligned('Half cages can also help stiffen the car chassis somewhat.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
                     
-                    elseif menuBodyStage == 2 then
+                    elseif MenuBodyStage == 2 then
                         ui.pushFont(ui.Font.Huge)
                         ui.setCursorX(125)
                         ui.setCursorY(175)
@@ -5043,7 +5242,7 @@ function script.drawUI()
                         ui.setCursorY(245)
                         ui.dwriteTextAligned('can also help stiffen the car chassis somewhat.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
                     
-                    elseif menuBodyStage == 3 then
+                    elseif MenuBodyStage == 3 then
                         ui.pushFont(ui.Font.Huge)
                         ui.setCursorX(125)
                         ui.setCursorY(175)
@@ -5073,26 +5272,26 @@ function script.drawUI()
                     ui.setCursorX(1138)
                     ui.setCursorY(879)
                     if ui.button('       ', vec2(220,70)) then
-                        if menuBodyStage == 0 then
+                        if MenuBodyStage == 0 then
                             money = money - 500
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Roll Bar'
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '500'
-                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
-                        elseif menuBodyStage == 1 then
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Roll Bar'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        elseif MenuBodyStage == 1 then
                             money = money - 500
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Half Cage'
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '500'
-                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
-                        elseif menuBodyStage == 2 then
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Half Cage'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        elseif MenuBodyStage == 2 then
                             money = money - 1000
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Full Cage'
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '1000'
-                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
-                        elseif menuBodyStage == 3 then
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Full Cage'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        elseif MenuBodyStage == 3 then
                             money = money - 1500
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 3] = 'Chassis Stengthening'
-                            carModifications [garageCarCycle + 1] [(tonumber(carModifications [garageCarCycle + 1] [2]) * 2) + 4] = '1500'
-                            carModifications [garageCarCycle + 1] [2] = tonumber(carModifications [garageCarCycle + 1] [2]) + 1
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Chassis Stengthening'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1500'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
                         end
                     end
                     
@@ -5123,7 +5322,2933 @@ function script.drawUI()
                     ui.setCursorY(786)
 
                     if ui.invisibleButton('', vec2(340,130)) then
-                        menuState = 20
+                        MenuState = 20
+                    end
+
+
+                end)
+
+
+            end)
+
+        elseif MenuState == 22 then
+
+            ui.transparentWindow('BRAKE TUNING SHOP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('BrakeTuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258)
+                    ui.setCursorY(29)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.drawLine(vec2(120,854), vec2(1380,854), rgbm(0.21,0.21,0.21,1), 190)
+
+                    ui.drawLine(vec2(120,304), vec2(280,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,304), vec2(680,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(920,304), vec2(1080,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(1320,304), vec2(1480,304), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.setCursorX(45)
+                    ui.setCursorY(150)
+
+                    ui.image('https://i.postimg.cc/MG5pwSg3/brakepads.png',vec2(310, 310))
+
+                    ui.setCursorX(535)
+                    ui.setCursorY(240)
+
+                    ui.image('https://i.postimg.cc/wjKvcFh2/brakedisc.png',vec2(130, 130))
+
+                    ui.setCursorX(931)
+                    ui.setCursorY(269)
+
+                    ui.image('https://i.postimg.cc/zGnfdW7r/brakefront.png',vec2(140, 70))
+
+                    ui.setCursorX(1331)
+                    ui.setCursorY(268)
+
+                    ui.image('https://i.postimg.cc/pdRL3Tcn/brakerear.png',vec2(140, 70))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Brake Pads', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Brake Rotors', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+                    
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(840)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Front Calipers', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1240)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Rear Calipers', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+                    
+                    ui.setCursorX(120)
+                    ui.setCursorY(235)
+
+                    if ui.button(' ', vec2(160,140)) then
+                        MenuBrakeStage = 0
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(235)
+
+                    if ui.button('  ', vec2(160,140)) then
+                        MenuBrakeStage = 1
+                    end
+
+                    ui.setCursorX(920)
+                    ui.setCursorY(235)
+
+                    if ui.button('   ', vec2(160,140)) then
+                        MenuBrakeStage = 2
+                    end
+
+                    ui.setCursorX(1320)
+                    ui.setCursorY(235)
+
+                    if ui.button('    ', vec2(160,140)) then
+                        MenuBrakeStage = 3
+                    end
+
+                    if MenuBrakeStage == 0 then
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('PERFORMANCE BRAKE PADS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                   
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('150 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('Performance brake pads are made to withstand higher temperatures and provide better friction. This will reduce brake fade and shorten', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('the stopping distance. Note this kit comes with 4 brake pads.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                    elseif MenuBrakeStage == 1 then
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('DRILLED/SLOTTED BRAKE ROTORS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                   
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('150 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('Drilled and slotted rotors improve the heat dissilation and better the cleaning of the brake pad contact area. Note this kit covers drilled,', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('slotted, or both drilled and slotted rotors. Comes with 4 rotors in total.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                    elseif MenuBrakeStage == 2 then
+
+                        ui.setCursorX(1080)
+                        ui.setCursorY(235)
+
+                        if ui.button('                     ', vec2(110,140)) then
+                            if MenuBrakeFrontStage > 1 then
+                                MenuBrakeFrontStage = 0
+                            else
+                                MenuBrakeFrontStage = MenuBrakeFrontStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(970)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(810)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                      ', vec2(110,140)) then
+                            if MenuBrakeFrontStage == 0 then
+                                MenuBrakeFrontStage = 2
+                            else
+                                MenuBrakeFrontStage = MenuBrakeFrontStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(705)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuBrakeFrontStage == 0 then
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('4 PISTON PERFORMANCE FRONT BRAKE CALIPER KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+                        elseif MenuBrakeFrontStage == 1 then
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('6 PISTON PERFORMANCE FRONT BRAKE CALIPER KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('2000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+                        elseif MenuBrakeFrontStage == 2 then
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('8 PISTON PERFORMANCE FRONT BRAKE CALIPER KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('4000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('Performance brake caliper kits can give more clamping force and handle more heat dissipation. Usually the more pistons the brake', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('caliper has the better the performance is, just know that you don\'t always need the biggest brake calipers. Note this kit comes with 2', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(275)
+                        ui.dwriteTextAligned('calipers for the front.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    elseif MenuBrakeStage == 3 then
+
+                        ui.setCursorX(1480)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                ', vec2(110,140)) then
+                            if MenuBrakeRearStage > 1 then
+                                MenuBrakeRearStage = 0
+                            else
+                                MenuBrakeRearStage = MenuBrakeRearStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(1370)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(1210)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                                    ', vec2(110,140)) then
+                            if MenuBrakeRearStage == 0 then
+                                MenuBrakeRearStage = 2
+                            else
+                                MenuBrakeRearStage = MenuBrakeRearStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(1105)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+
+
+                        if MenuBrakeRearStage == 0 then
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('2 PISTON PERFORMANCE REAR BRAKE CALIPER KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                       
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+                        elseif MenuBrakeRearStage == 1 then
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('4 PISTON PERFORMANCE REAR BRAKE CALIPER KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                       
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+                        elseif MenuBrakeRearStage == 2 then
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('6 PISTON PERFORMANCE REAR BRAKE CALIPER KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                       
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('2000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('Performance brake caliper kits can give more clamping force and handle more heat dissipation. Usually the more pistons the brake', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('caliper has the better the performance is, just know that you don\'t always need the biggest brake calipers. Note this kit comes with 2', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(275)
+                        ui.dwriteTextAligned('calipers for the rear.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    end
+                    
+                    ui.setCursorX(145)
+                    ui.setCursorY(315)
+                    ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.End, ui.Alignment.Center, 1200, false, rgbm(0.6,0.2,1,1))
+
+                    ui.setCursorX(1138)
+                    ui.setCursorY(879)
+                    if ui.button('       ', vec2(220,70)) then
+                        if MenuBrakeStage == 0 then
+                            money = money - 150
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Brake Pads'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '150'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        elseif MenuBrakeStage == 1 then
+                            money = money - 150
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Brake Rotors'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '150'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        elseif MenuBrakeStage == 2 then
+                            if MenuBrakeFrontStage == 0 then
+                                money = money - 1000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = '4 Piston Front Calipers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuBrakeFrontStage == 1 then
+                                money = money - 2000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = '6 Piston Front Calipers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '2000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuBrakeFrontStage == 2 then
+                                money = money - 4000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = '8 Piston Front Calipers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '4000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuBrakeStage == 3 then
+                            if MenuBrakeRearStage == 0 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = '2 Piston Rear Calipers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuBrakeRearStage == 1 then
+                                money = money - 1000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = '4 Piston Rear Calipers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuBrakeRearStage == 2 then
+                                money = money - 2000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = '6 Piston Rear Calipers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '2000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        end
+                    end
+                    
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        MenuState = 20
+                    end
+
+
+                end)
+
+
+            end)
+
+        elseif MenuState == 23 then
+
+            ui.transparentWindow('ENGINE TUNING SHOP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('EngineTuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258)
+                    ui.setCursorY(29)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.drawLine(vec2(120,854), vec2(1380,854), rgbm(0.21,0.21,0.21,1), 190)
+
+                    ui.drawLine(vec2(120,304), vec2(280,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,304), vec2(680,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(920,304), vec2(1080,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(1320,304), vec2(1480,304), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.drawLine(vec2(120,554), vec2(280,554), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,554), vec2(680,554), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.setCursorX(125)
+                    ui.setCursorY(230)
+
+                    ui.image('https://i.postimg.cc/d19SQqYX/cooling.png',vec2(150, 150))
+
+                    ui.setCursorX(530)
+                    ui.setCursorY(230)
+
+                    ui.image('https://i.postimg.cc/HsnPHDPZ/exhaust.png',vec2(140, 140))
+
+                    ui.setCursorX(891)
+                    ui.setCursorY(199)
+
+                    ui.image('https://i.postimg.cc/rsFZKvyp/intake.png',vec2(220, 220))
+
+                    ui.setCursorX(1331)
+                    ui.setCursorY(236)
+
+                    ui.image('https://i.postimg.cc/6qjjRYTf/ecu.png',vec2(140, 140))
+
+                    ui.setCursorX(35)
+                    ui.setCursorY(392)
+
+                    ui.image('https://i.postimg.cc/NGpPWfb2/fuelsystem.png',vec2(350, 350))
+
+                    ui.setCursorX(490)
+                    ui.setCursorY(448)
+
+                    ui.image('https://i.postimg.cc/TYsN37zR/engineoverhaul.png',vec2(220, 220))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Cooling', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Exhaust', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+                    
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(840)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Intake', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1240)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('ECU', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(497)
+                    ui.dwriteTextAligned('Fuel System', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(497)
+                    ui.dwriteTextAligned('Engine', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(235)
+
+                    if ui.button(' ', vec2(160,140)) then
+                        MenuEngineStage = 0
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(235)
+
+                    if ui.button('  ', vec2(160,140)) then
+                        MenuEngineStage = 1
+                    end
+
+                    ui.setCursorX(920)
+                    ui.setCursorY(235)
+
+                    if ui.button('   ', vec2(160,140)) then
+                        MenuEngineStage = 2
+                    end
+
+                    ui.setCursorX(1320)
+                    ui.setCursorY(235)
+
+                    if ui.button('    ', vec2(160,140)) then
+                        MenuEngineStage = 3
+                    end
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(485)
+
+                    if ui.button('     ', vec2(160,140)) then
+                        MenuEngineStage = 4
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(485)
+
+                    if ui.button('      ', vec2(160,140)) then
+                        MenuEngineStage = 5
+                    end
+
+                    if MenuEngineStage == 0 then
+                        ui.setCursorX(280)
+                        ui.setCursorY(235)
+
+                        if ui.button('                     ', vec2(110,140)) then
+                            if MenuEngineCoolStage > 0 then
+                                MenuEngineCoolStage = 0
+                            else
+                                MenuEngineCoolStage = MenuEngineCoolStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(170)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(10)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                      ', vec2(110,140)) then
+                            if MenuEngineCoolStage == 0 then
+                                MenuEngineCoolStage = 1
+                            else
+                                MenuEngineCoolStage = MenuEngineCoolStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-105)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuEngineCoolStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('PERFORMANCE RADIATOR', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A performance radiator can provide a car with improved cooling efficiency that can handle increased heat generation from a modified', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('engine. This will allow the engine to run longer without worrying about overheating.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuEngineCoolStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('PERFORMANCE INTERCOOLER', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A performance intercooler can provide cars with a turbo improved cooling efficiency that can handle increased heat generation from the', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('turbo when modified. This will allow the engine to run longer without worrying about overheating. Note this is only for turbocharged cars.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuEngineStage == 1 then
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('AFTERMARKET EXHAUST', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                   
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('800 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('An aftermarket exhaust can provide a car with a slight increase in power and a more aggressive sound compared to the stock exhaust', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('system due to the larger diameter of pipes allowing better exhaust gas flow.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                    elseif MenuEngineStage == 2 then
+
+                        ui.setCursorX(1080)
+                        ui.setCursorY(235)
+
+                        if ui.button('                  ', vec2(110,140)) then
+                            if MenuEngineIntakeStage > 0 then
+                                MenuEngineIntakeStage = 0
+                            else
+                                MenuEngineIntakeStage = MenuEngineIntakeStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(970)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(810)
+                        ui.setCursorY(235)
+
+                        if ui.button('                            ', vec2(110,140)) then
+                            if MenuEngineIntakeStage == 0 then
+                                MenuEngineIntakeStage = 1
+                            else
+                                MenuEngineIntakeStage = MenuEngineIntakeStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(705)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuEngineIntakeStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('PERFORMANCE COLD AIR INTAKE', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('400 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A performance cold air intake is designed to find cold air in an otherwise hot under-hood environment, improving engine performance.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuEngineIntakeStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('AFTERMARKET INTAKE MANIFOLD', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('An aftermarket intake manifold is specifically designed to optimize airflow into the engine allowing for improved engine performance.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuEngineStage == 3 then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('ECU TUNE', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('800 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('An ECU tune can maximize power and acceleration by adjusting parameters like fuel injection, ignition timing, and air-fuel mixture. This', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                    
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('will lead to improved engine performance and better engine response.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                    elseif MenuEngineStage == 4 then
+
+                        ui.setCursorX(280)
+                        ui.setCursorY(485)
+
+                        if ui.button('                                                                                 ', vec2(110,140)) then
+                            if MenuEngineFuelStage > 1 then
+                                MenuEngineFuelStage = 0
+                            else
+                                MenuEngineFuelStage = MenuEngineFuelStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(170)
+                        ui.setCursorY(400)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(10)
+                        ui.setCursorY(485)
+
+                        if ui.button('                                              ', vec2(110,140)) then
+                            if MenuEngineFuelStage == 0 then
+                                MenuEngineFuelStage = 2
+                            else
+                                MenuEngineFuelStage = MenuEngineFuelStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-105)
+                        ui.setCursorY(400)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuEngineFuelStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 1 PERFORMANCE FUEL SYSTEM KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('400 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Supporting fuel system for up to OEM engine power +300 additional hp. A performance fuel system is designed to deliver a high volume', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('of fuel at consistent pressure, allowing for optimal power delivery.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuEngineFuelStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 2 PERFORMANCE FUEL SYSTEM KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('800 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Supporting fuel system for up to OEM engine power +600 additional hp. A performance fuel system is designed to deliver a high volume', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('of fuel at consistent pressure, allowing for optimal power delivery.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuEngineFuelStage == 2 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 3 PERFORMANCE FUEL SYSTEM KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1600 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Supporting fuel system for any engine power. A performance fuel system is designed to deliver a high volume of fuel at consistent', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('pressure, allowing for optimal power delivery.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuEngineStage == 5 then
+
+                        ui.setCursorX(680)
+                        ui.setCursorY(485)
+
+                        if ui.button('                                         ', vec2(110,140)) then
+                            if MenuEngineOverhaulStage > 1 then
+                                MenuEngineOverhaulStage = 0
+                            else
+                                MenuEngineOverhaulStage = MenuEngineOverhaulStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(570)
+                        ui.setCursorY(400)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(410)
+                        ui.setCursorY(485)
+
+                        if ui.button('                                                  ', vec2(110,140)) then
+                            if MenuEngineOverhaulStage == 0 then
+                                MenuEngineOverhaulStage = 2
+                            else
+                                MenuEngineOverhaulStage = MenuEngineOverhaulStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(305)
+                        ui.setCursorY(400)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuEngineOverhaulStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 1 ENGINE OVERHAUL KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('3000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For engine with no more than 500 hp, includes all necessary parts for a built engine. An engine overhaul is when a car\'s engine is', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('completely disassembled, thoroughly cleaned, and rebuilt with replacement parts optimal for maximum performance.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuEngineOverhaulStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 2 ENGINE OVERHAUL KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('5000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For engine with no more than 700 hp, includes all necessary parts for a built engine. An engine overhaul is when a car\'s engine is', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('completely disassembled, thoroughly cleaned, and rebuilt with replacement parts optimal for maximum performance.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuEngineOverhaulStage == 2 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 3 ENGINE OVERHAUL KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('8000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For engine with more than 700 hp, includes all necessary parts for a built engine. An engine overhaul is when a car\'s engine is completely', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('disassembled, thoroughly cleaned, and rebuilt with replacement parts optimal for maximum performance.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+                    end
+                    
+                    ui.setCursorX(145)
+                    ui.setCursorY(315)
+                    ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.End, ui.Alignment.Center, 1200, false, rgbm(0.6,0.2,1,1))
+
+                    ui.setCursorX(1138)
+                    ui.setCursorY(879)
+                    if ui.button('       ', vec2(220,70)) then
+                        if MenuEngineStage == 0 then
+                            if MenuEngineCoolStage == 0 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Performance Radiator'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuEngineCoolStage == 1 then
+                                money = money - 1500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Performance Intercooler'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuEngineStage == 1 then
+                            money = money - 800
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Aftermarket Exhaust'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '800'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        elseif MenuEngineStage == 2 then
+                            if MenuEngineIntakeStage == 0 then
+                                money = money - 400
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Cold Air Intake'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '400'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuEngineIntakeStage == 1 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Aftermarket Intake Manifold'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuEngineStage == 3 then
+                            money = money - 800
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'ECU Tune'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '800'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        elseif MenuEngineStage == 4 then
+                            if MenuEngineFuelStage == 0 then
+                                money = money - 400
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 1 Fuel System'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '400'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuEngineFuelStage == 1 then
+                                money = money - 800
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 2 Fuel System'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '800'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuEngineFuelStage == 2 then
+                                money = money - 1600
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 3 Fuel System'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1600'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuEngineStage == 5 then
+                            if MenuEngineOverhaulStage == 0 then
+                                money = money - 3000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 1 Engine Overhaul'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '3000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuEngineOverhaulStage == 1 then
+                                money = money - 5000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 2 Engine Overhaul'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '5000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuEngineOverhaulStage == 2 then
+                                money = money - 8000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 3 Engine Overhaul'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '8000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        end
+                        
+                    end
+                    
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        MenuState = 20
+                    end
+
+
+                end)
+
+
+            end)
+
+        elseif MenuState == 24 then
+
+            ui.transparentWindow('DRIVETRAIN TUNING SHOP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('DrivetrainTuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258)
+                    ui.setCursorY(29)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.drawLine(vec2(120,854), vec2(1380,854), rgbm(0.21,0.21,0.21,1), 190)
+
+                    ui.drawLine(vec2(120,304), vec2(280,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,304), vec2(680,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(920,304), vec2(1080,304), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.setCursorX(140)
+                    ui.setCursorY(245)
+
+                    ui.image('https://i.postimg.cc/Z515WM04/gear.png',vec2(120, 120))
+
+                    ui.setCursorX(528)
+                    ui.setCursorY(233)
+
+                    ui.image('https://i.postimg.cc/6Qn5nfGR/diff.png',vec2(145, 145))
+
+                    ui.setCursorX(935)
+                    ui.setCursorY(239)
+
+                    ui.image('https://i.postimg.cc/W3VpnqMy/clutch.png',vec2(130, 130))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Transmission', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Differential', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+                    
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(840)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Clutch', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(235)
+
+                    if ui.button(' ', vec2(160,140)) then
+                        MenuDrivetrainStage = 0
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(235)
+
+                    if ui.button('  ', vec2(160,140)) then
+                        MenuDrivetrainStage = 1
+                    end
+
+                    ui.setCursorX(920)
+                    ui.setCursorY(235)
+
+                    if ui.button('   ', vec2(160,140)) then
+                        MenuDrivetrainStage = 2
+                    end
+
+                    if MenuDrivetrainStage == 0 then
+                        ui.setCursorX(280)
+                        ui.setCursorY(235)
+
+                        if ui.button('                     ', vec2(110,140)) then
+                            if MenuDrivetrainGearStage > 2 then
+                                MenuDrivetrainGearStage = 0
+                            else
+                                MenuDrivetrainGearStage = MenuDrivetrainGearStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(170)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(10)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                      ', vec2(110,140)) then
+                            if MenuDrivetrainGearStage == 0 then
+                                MenuDrivetrainGearStage = 3
+                            else
+                                MenuDrivetrainGearStage = MenuDrivetrainGearStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-105)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuDrivetrainGearStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('AFTERMARKET FINAL GEAR', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('750 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('An aftermarket final gear will change the final drive ratio which will impact the cars acceleration and top speed.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuDrivetrainGearStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('AFTERMARKET GEAR SET', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('An aftermarket gear set will change the gear ratios in the gearbox which will impact the cars acceleration and top speed.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuDrivetrainGearStage == 2 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('TRANSMISSION SWAP', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('2500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A transmission swap lets you put in a completely different gearbox from another car. Must remain same transmission type', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('(ex: manual if already manual, automatic if already automatic).', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuDrivetrainGearStage == 3 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('TRANSMISSION CONVERSION KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('5000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A transmission conversion kit lets you convert a car from automatic to manual or manual to automatic, kit includes gearbox and', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('everything needed for the swap for the car to function (does not include for example manual gauge cluster if automatic one is different).', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuDrivetrainStage == 1 then
+
+                        ui.setCursorX(680)
+                        ui.setCursorY(235)
+
+                        if ui.button('                         ', vec2(110,140)) then
+                            if MenuDrivetrainDiffStage > 2 then
+                                MenuDrivetrainDiffStage = 0
+                            else
+                                MenuDrivetrainDiffStage = MenuDrivetrainDiffStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(570)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(410)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                                 ', vec2(110,140)) then
+                            if MenuDrivetrainDiffStage == 0 then
+                                MenuDrivetrainDiffStage = 3
+                            else
+                                MenuDrivetrainDiffStage = MenuDrivetrainDiffStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(305)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+
+                        if MenuDrivetrainDiffStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('OEM REPLACEMENT DIFFERENTIAL', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Replaces a current differential with an OEM replacement one sold by the manufacturer. Note this is only one differential.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuDrivetrainDiffStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('PERFORMANCE NON ADJUSTABLE LIMITED SLIP DIFFERENTIAL (LSD)', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A limited slip differential (LSD) is a system designed to improve traction by preventing excessive wheelspin of one wheel. A performance', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('one can increase the amount of traction the car has even over an OEM LSD. Note this is non adjustable and includes only one differential.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuDrivetrainDiffStage == 2 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('PERFORMANCE FULLY ADJUSTABLE LIMITED SLIP DIFFERENTIAL (LSD)', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('2500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A limited slip differential (LSD) is a system designed to improve traction by preventing excessive wheelspin of one wheel. A performance', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('one can increase the amount of traction the car has even over an OEM LSD. Note this is fully adjustable and includes only one differential.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuDrivetrainDiffStage == 3 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('ELECTRONICALLY MANAGED DIFFERENTIAL SWAP', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('5000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('An electronically managed differential is a differential that is managed by a computer system. Common systems like this are Mitsubishi', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('ACD, Nissan ATESSA, Subaru DCCD just to list a few examples. Note this includes the kit for only one differential and should only be', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('bought in special circumstances if you know what you are doing.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuDrivetrainStage == 2 then
+
+                        ui.setCursorX(1080)
+                        ui.setCursorY(235)
+
+                        if ui.button('                  ', vec2(110,140)) then
+                            if MenuDrivetrainClutchStage > 0 then
+                                MenuDrivetrainClutchStage = 0
+                            else
+                                MenuDrivetrainClutchStage = MenuDrivetrainClutchStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(970)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(810)
+                        ui.setCursorY(235)
+
+                        if ui.button('                            ', vec2(110,140)) then
+                            if MenuDrivetrainClutchStage == 0 then
+                                MenuDrivetrainClutchStage = 1
+                            else
+                                MenuDrivetrainClutchStage = MenuDrivetrainClutchStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(705)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuDrivetrainClutchStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('OEM+ CLUTCH REPLACEMENT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Supporting clutches up to a 20% increase over OEM clutch torque in NM. An OEM+ clutch replacement is intended to be a slight', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('upgrade in clutch performance.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuDrivetrainClutchStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('HIGH PERFORMANCE CLUTCH', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Supporting clutches of any torque. A high performance clutch features reinforced components to handle extreme torque levels and high', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('temperatures without slipping.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    end
+                    
+                    ui.setCursorX(145)
+                    ui.setCursorY(315)
+                    ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.End, ui.Alignment.Center, 1200, false, rgbm(0.6,0.2,1,1))
+
+                    ui.setCursorX(1138)
+                    ui.setCursorY(879)
+                    if ui.button('       ', vec2(220,70)) then
+                        if MenuDrivetrainStage == 0 then
+                            if MenuDrivetrainGearStage == 0 then
+                                money = money - 750
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Aftermarket Final Gear'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '750'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuDrivetrainGearStage == 1 then
+                                money = money - 1000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Aftermarket Gear Set'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuDrivetrainGearStage == 2 then
+                                money = money - 2500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Transmission Swap'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '2500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuDrivetrainGearStage == 3 then
+                                money = money - 5000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Transmission Conversion Kit'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '5000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuDrivetrainStage == 1 then
+                            if MenuDrivetrainDiffStage == 0 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'OEM Differential'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuDrivetrainDiffStage == 1 then
+                                money = money - 1000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Non adjustable LSD'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuDrivetrainDiffStage == 2 then
+                                money = money - 2500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Adjustable LSD'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '2500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuDrivetrainDiffStage == 3 then
+                                money = money - 5000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Electronic Differential'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '5000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuDrivetrainStage == 2 then
+                            if MenuDrivetrainClutchStage == 0 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'OEM+ Clutch'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuDrivetrainClutchStage == 1 then
+                                money = money - 1000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'High Performance Clutch'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        end
+                        
+                    end
+                    
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        MenuState = 20
+                    end
+
+
+                end)
+
+
+            end)
+
+        elseif MenuState == 25 then
+
+            ui.transparentWindow('TURBO TUNING SHOP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('TurboTuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258)
+                    ui.setCursorY(29)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.drawLine(vec2(120,854), vec2(1380,854), rgbm(0.21,0.21,0.21,1), 190)
+
+                    ui.drawLine(vec2(120,304), vec2(280,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,304), vec2(680,304), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.setCursorX(135)
+                    ui.setCursorY(240)
+
+                    ui.image('https://i.postimg.cc/J0xkbhwd/turbo-Turbo.png',vec2(130, 130))
+
+                    ui.setCursorX(513)
+                    ui.setCursorY(219)
+
+                    ui.image('https://i.postimg.cc/4424hcjR/turbo-Supercharger.png',vec2(175, 175))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Turbo', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Supercharger', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(235)
+
+                    if ui.button(' ', vec2(160,140)) then
+                        MenuTurboStage = 0
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(235)
+
+                    if ui.button('  ', vec2(160,140)) then
+                        MenuTurboStage = 1
+                    end
+
+                    if MenuTurboStage == 0 then
+                        ui.setCursorX(280)
+                        ui.setCursorY(235)
+
+                        if ui.button('                     ', vec2(110,140)) then
+                            if MenuTurboTurboStage > 1 then
+                                MenuTurboTurboStage = 0
+                            else
+                                MenuTurboTurboStage = MenuTurboTurboStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(170)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(10)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                      ', vec2(110,140)) then
+                            if MenuTurboTurboStage == 0 then
+                                MenuTurboTurboStage = 2
+                            else
+                                MenuTurboTurboStage = MenuTurboTurboStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-105)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuTurboTurboStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 1 AFTERMARKET TURBO KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('3000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For engine with no more than 400 hp. An aftermarket turbo kit is designed to increase the power output of the engine which will impact', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('the cars acceleration and top speed.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuTurboTurboStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 2 AFTERMARKET TURBO KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('5000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For engine with no more than 600 hp. An aftermarket turbo kit is designed to increase the power output of the engine which will impact', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('the cars acceleration and top speed.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuTurboTurboStage == 2 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 3 AFTERMARKET TURBO KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('8000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For engine with more than 600 hp. An aftermarket turbo kit is designed to increase the power output of the engine which will impact the', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('cars acceleration and top speed.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuTurboStage == 1 then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(125)
+                        ui.setCursorY(175)
+                        ui.dwriteTextAligned('AFTERMARKET SUPERCHARGER KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-135)
+                        ui.setCursorY(305)
+                        ui.dwriteTextAligned('4500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(165)
+                        ui.setCursorY(215)
+                        ui.dwriteTextAligned('An aftermarket supercharger kit is designed to increase the power output of the engine which will impact the cars acceleration and top', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(135)
+                        ui.setCursorY(245)
+                        ui.dwriteTextAligned('speed.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                    end
+                    
+                    ui.setCursorX(145)
+                    ui.setCursorY(315)
+                    ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.End, ui.Alignment.Center, 1200, false, rgbm(0.6,0.2,1,1))
+
+                    ui.setCursorX(1138)
+                    ui.setCursorY(879)
+                    if ui.button('       ', vec2(220,70)) then
+                        if MenuTurboStage == 0 then
+                            if MenuTurboTurboStage == 0 then
+                                money = money - 3000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 1 Turbo Kit'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '3000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuTurboTurboStage == 1 then
+                                money = money - 5000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 2 Turbo Kit'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '5000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuTurboTurboStage == 2 then
+                                money = money - 8000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 3 Turbo Kit'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '8000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuTurboStage == 1 then
+                            money = money - 4500
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Supercharger Kit'
+                            carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '4500'
+                            carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                        end
+                        
+                    end
+                    
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        MenuState = 20
+                    end
+
+
+                end)
+
+
+            end)
+
+
+        elseif MenuState == 26 then
+
+            ui.transparentWindow('SUSP TUNING SHOP', vec2(((uiState.windowSize.x - 1920) / 2), ((uiState.windowSize.y - 1080) / 2)), vec2(((uiState.windowSize.x - 1920) / 2) + 1920,((uiState.windowSize.y - 1080) / 2) + 1080), function ()
+
+                ui.pushFont(ui.Font.Huge)
+                ui.childWindow('SuspTuningShop', vec2(1920, 1080), false, ui.WindowFlags.None, function ()
+
+                    ui.drawRectFilled(vec2(0,0), vec2(1920,1080), rgbm(0.1,0.1,0.1,0.4))
+
+                    ui.setCursorX(100)
+                    ui.setCursorY(-40)
+
+                    ui.image('https://i.postimg.cc/g0F570Ct/badge1.png',vec2(200,200))
+
+                    if mortal then
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 3)
+                        ui.setCursorY(-55 + 2)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36 - 1.5)
+                        ui.setCursorY(-55 + 1)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(0,0,0,0.5))
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(36)
+                        ui.setCursorY(-55)
+                        ui.dwriteTextAligned('MORTAL', 30, ui.Alignment.Center, ui.Alignment.Top, 324, false, rgbm(1,0,0,1))
+
+
+                    end
+
+
+                    --- DEALERSHIP ---
+
+                    ui.setCursorX(1080 / 2 + 150)
+                    ui.setCursorY(-190)
+
+                    ui.image('https://i.postimg.cc/907g15xH/HEXAGON-BUTTON-PURPLE.png',vec2(500,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 2)
+                    ui.setCursorY(29 + 2)
+                    ui.textColored('TUNING SHOP', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258 + 1)
+                    ui.setCursorY(29 + 1)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 / 2 + 258)
+                    ui.setCursorY(29)
+                    ui.textColored('TUNING SHOP', rgbm(0.8,0,1,1))
+
+                    --- MONEY ---
+
+                    ui.setCursorX(1080 + 300)
+                    ui.setCursorY(-186)
+
+                    ui.image('https://i.postimg.cc/vBDNg6fB/HEXAGON-BUTTON-BLUE.png',vec2(450,500))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 2)
+                    ui.setCursorY(-101 + 2)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330 + 1)
+                    ui.setCursorY(-101 + 1)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 330)
+                    ui.setCursorY(-101)
+                    ui.dwriteTextAligned(money, 54, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 2)
+                    ui.setCursorY(-95 + 2)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370 + 1)
+                    ui.setCursorY(-95 + 1)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1080 + 370)
+                    ui.setCursorY(-95)
+                    ui.dwriteTextAligned('cr', 40, ui.Alignment.End, ui.Alignment.Center, 324, false, rgbm(0.8,0,1,1))
+
+                    ui.drawLine(vec2(120,854), vec2(1380,854), rgbm(0.21,0.21,0.21,1), 190)
+
+                    ui.drawLine(vec2(120,304), vec2(280,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(520,304), vec2(680,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(920,304), vec2(1080,304), rgbm(0.1,0.1,0.1,1), 140)
+                    ui.drawLine(vec2(1320,304), vec2(1480,304), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.drawLine(vec2(120,554), vec2(280,554), rgbm(0.1,0.1,0.1,1), 140)
+
+                    ui.setCursorX(125)
+                    ui.setCursorY(254)
+
+                    ui.image('https://i.postimg.cc/SRjvbgPw/swayBar.png',vec2(150, 100))
+
+                    ui.setCursorX(536)
+                    ui.setCursorY(239)
+
+                    ui.image('https://i.postimg.cc/MKCrgbmF/spring.png',vec2(130, 130))
+
+                    ui.setCursorX(941)
+                    ui.setCursorY(244)
+
+                    ui.image('https://i.postimg.cc/1XTYmph4/coilover.png',vec2(120, 120))
+
+                    ui.setCursorX(1341)
+                    ui.setCursorY(244)
+
+                    ui.image('https://i.postimg.cc/sDQNn07W/geometry.png',vec2(120, 120))
+
+                    ui.setCursorX(80)
+                    ui.setCursorY(429)
+
+                    ui.image('https://i.postimg.cc/DfYNPKJF/other.png',vec2(240, 250))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Sway Bars', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(440)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Springs', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+                    
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(840)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Coilovers', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1240)
+                    ui.setCursorY(245)
+                    ui.dwriteTextAligned('Geometry', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(40)
+                    ui.setCursorY(497)
+                    ui.dwriteTextAligned('Other', 54, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(235)
+
+                    if ui.button(' ', vec2(160,140)) then
+                        MenuSuspStage = 0
+                    end
+
+                    ui.setCursorX(520)
+                    ui.setCursorY(235)
+
+                    if ui.button('  ', vec2(160,140)) then
+                        MenuSuspStage = 1
+                    end
+
+                    ui.setCursorX(920)
+                    ui.setCursorY(235)
+
+                    if ui.button('   ', vec2(160,140)) then
+                        MenuSuspStage = 2
+                    end
+
+                    ui.setCursorX(1320)
+                    ui.setCursorY(235)
+
+                    if ui.button('    ', vec2(160,140)) then
+                        MenuSuspStage = 3
+                    end
+
+                    ui.setCursorX(120)
+                    ui.setCursorY(485)
+
+                    if ui.button('     ', vec2(160,140)) then
+                        MenuSuspStage = 4
+                    end
+
+                    if MenuSuspStage == 0 then
+                        ui.setCursorX(280)
+                        ui.setCursorY(235)
+
+                        if ui.button('                     ', vec2(110,140)) then
+                            if MenuSuspSwayStage > 0 then
+                                MenuSuspSwayStage = 0
+                            else
+                                MenuSuspSwayStage = MenuSuspSwayStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(170)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(10)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                      ', vec2(110,140)) then
+                            if MenuSuspSwayStage == 0 then
+                                MenuSuspSwayStage = 1
+                            else
+                                MenuSuspSwayStage = MenuSuspSwayStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-105)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuSuspSwayStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('OEM REPLACEMENT SWAY BAR', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('150 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Note this kit only includes a single sway bar for either the front or the rear. Sway bars are used to help restrict the body roll of a car', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('which can help increase corning potential in the car.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuSuspSwayStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('AFTERMARKET SWAY BAR', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('300 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Note this kit only includes a single sway bar for either the front or the rear. Sway bars are used to help restrict the body roll of a car', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('which can help increase corning potential in the car.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuSuspStage == 1 then
+
+                        ui.setCursorX(680)
+                        ui.setCursorY(235)
+
+                        if ui.button('                         ', vec2(110,140)) then
+                            if MenuSuspSpringStage > 0 then
+                                MenuSuspSpringStage = 0
+                            else
+                                MenuSuspSpringStage = MenuSuspSpringStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(570)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(410)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                                 ', vec2(110,140)) then
+                            if MenuSuspSpringStage == 0 then
+                                MenuSuspSpringStage = 1
+                            else
+                                MenuSuspSpringStage = MenuSuspSpringStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(305)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+
+                        if MenuSuspSpringStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('LOWERING SPRINGS KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('250 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Note this kit includes all 4 springs for the car. Lowering springs are a budget way to lower a vehicles ride height and will give a stiffer', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('suspension feeling. However, since this is only changing the spring rate it can typically cause the car to not match the compression and', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('dampening of the strut which will result in a bouncy and hard ride.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+
+                        elseif MenuSuspSpringStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('CUSTOM SPRINGS KIT FOR COILOVERS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Note this kit includes all 4 springs for the car and only works with coilovers. Custom springs are designed to replace default springs that', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+                        
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('come on the coilovers you purchased which can give you more customizability of how stiff you want the car to be.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuSuspStage == 2 then
+
+                        ui.setCursorX(1080)
+                        ui.setCursorY(235)
+
+                        if ui.button('                  ', vec2(110,140)) then
+                            if MenuSuspCoilStage > 2 then
+                                MenuSuspCoilStage = 0
+                            else
+                                MenuSuspCoilStage = MenuSuspCoilStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(970)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(810)
+                        ui.setCursorY(235)
+
+                        if ui.button('                            ', vec2(110,140)) then
+                            if MenuSuspCoilStage == 0 then
+                                MenuSuspCoilStage = 3
+                            else
+                                MenuSuspCoilStage = MenuSuspCoilStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(705)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuSuspCoilStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 1 AFTERMARKET COILOVERS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For coilovers priced no more than $1500 USD in real life, these typically include brands like Fortune Auto, BC Racing, and Megan Racing.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('Aftermarket coilovers include different springs and dampers that allow for individual adjustment of the ground clearence and damper', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('behavior. This usually makes the car react a lot better to corners and feel overall stiffer.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuSuspCoilStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 2 AFTERMARKET COILOVERS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('3000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For coilovers priced between $1500 and $4000 USD in real life, these typically include brands like Ohlins, KW, and HKS. Aftermarket', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('coilovers include different springs and dampers that allow for individual adjustment of the ground clearence and damper behavior. This', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('usually makes the car react a lot better to corners and feel overall stiffer.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuSuspCoilStage == 2 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 3 AFTERMARKET COILOVERS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('6000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For coilovers priced over $4000 USD in real life, these typically are the top of the line motorsport type coilovers from different brands.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('Aftermarket coilovers include different springs and dampers that allow for individual adjustment of the ground clearence and damper', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('behavior. This usually makes the car react a lot better to corners and feel overall stiffer.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuSuspCoilStage == 3 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STAGE 4 AFTERMARKET COILOVERS', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('9000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('For coilovers that are revalved and custom made, these should only be bought if you know what you are doing. Aftermarket coilovers', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('include different springs and dampers that allow for individual adjustment of the ground clearence and damper behavior. This usually', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('makes the car react a lot better to corners and feel overall stiffer.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    elseif MenuSuspStage == 3 then
+
+                        ui.setCursorX(1480)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                ', vec2(110,140)) then
+                            if MenuSuspArmStage > 1 then
+                                MenuSuspArmStage = 0
+                            else
+                                MenuSuspArmStage = MenuSuspArmStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(1370)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(1210)
+                        ui.setCursorY(235)
+
+                        if ui.button('                                                    ', vec2(110,140)) then
+                            if MenuSuspArmStage == 0 then
+                                MenuSuspArmStage = 2
+                            else
+                                MenuSuspArmStage = MenuSuspArmStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(1105)
+                        ui.setCursorY(145)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuSuspArmStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('STEERING ANGLE KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                       
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('1000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('A steering angle kit is designed to increase the steering angle of the car by modifying the front suspension geometry for more', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('pronounced drifts', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuSuspArmStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('SUSPENSION COMPONENT REPLACEMENT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                       
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Only purchase this if you know what you are doing suspension wise. Note this is only for a specific suspension parts mirrored on both', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('sides, like for changing out the front control arms. You need to purchase it twice if you want to do both front and rear upper control arms', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('or only the front upper and lower control arms for example.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+    
+                        elseif MenuSuspArmStage == 2 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('CUSTOM SUSPENSION GEOMETRY', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                       
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('20000 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Only purchase this if you know what you are doing suspension wise. Highly recommended to not do this unless you are very familar with', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('modifying suspension geometry in this game. This is for fully custom geometry on the car, it can literally be anything you want it to be that', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(275)
+                            ui.dwriteTextAligned('is theoretically possible in real life.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+    
+                        end
+
+
+                    elseif MenuSuspStage == 4 then
+
+                        ui.setCursorX(280)
+                        ui.setCursorY(485)
+
+                        if ui.button('                                                                                 ', vec2(110,140)) then
+                            if MenuSuspOtherStage > 0 then
+                                MenuSuspOtherStage = 0
+                            else
+                                MenuSuspOtherStage = MenuSuspOtherStage + 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(170)
+                        ui.setCursorY(400)
+                        ui.dwriteTextAligned('next', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        ui.setCursorX(10)
+                        ui.setCursorY(485)
+
+                        if ui.button('                                              ', vec2(110,140)) then
+                            if MenuSuspOtherStage == 0 then
+                                MenuSuspOtherStage = 1
+                            else
+                                MenuSuspOtherStage = MenuSuspOtherStage - 1
+                            end
+                            
+                        end
+
+                        ui.pushFont(ui.Font.Huge)
+                        ui.setCursorX(-105)
+                        ui.setCursorY(400)
+                        ui.dwriteTextAligned('prev.', 34, ui.Alignment.Center, ui.Alignment.Center, 324, false, rgbm(0.8,0.8,0.8,1))
+
+                        if MenuSuspOtherStage == 0 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('PERFORMANCE RUBBER BUSHINGS KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('300 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Kit includes all the bushings for the whole car. Aftermarket rubber bushings are designed to make the overall car feel stiffer.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        elseif MenuSuspOtherStage == 1 then
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(125)
+                            ui.setCursorY(175)
+                            ui.dwriteTextAligned('OEM SHOCK REPLACEMENT KIT', 35, ui.Alignment.Center, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,1))
+                    
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(-135)
+                            ui.setCursorY(305)
+                            ui.dwriteTextAligned('500 cr', 35, ui.Alignment.End, ui.Alignment.Center, 1224, false, rgbm(0.95,0.2,0.1,1))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(165)
+                            ui.setCursorY(215)
+                            ui.dwriteTextAligned('Kit includes shocks for the whole car. Shocks/dampers control the movement of the spring and suspension components and can dictate', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                            ui.pushFont(ui.Font.Huge)
+                            ui.setCursorX(135)
+                            ui.setCursorY(245)
+                            ui.dwriteTextAligned('how the car reacts to bumps.', 20, ui.Alignment.Start, ui.Alignment.Center, 1224, false, rgbm(0.95,0.95,0.95,0.8))
+
+                        end
+
+                    end
+                    
+                    ui.setCursorX(145)
+                    ui.setCursorY(315)
+                    ui.dwriteTextAligned('PURCHASE', 40, ui.Alignment.End, ui.Alignment.Center, 1200, false, rgbm(0.6,0.2,1,1))
+
+                    ui.setCursorX(1138)
+                    ui.setCursorY(879)
+                    if ui.button('       ', vec2(220,70)) then
+                        if MenuSuspStage == 0 then
+                            if MenuSuspSwayStage == 0 then
+                                money = money - 150
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'OEM Replacement ARB'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '150'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspSwayStage == 1 then
+                                money = money - 300
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Aftermarket ARB'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '300'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuSuspStage == 1 then
+                            if MenuSuspSpringStage == 0 then
+                                money = money - 250
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Lowering Springs'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '250'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspSpringStage == 1 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Custom Springs for Coilovers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuSuspStage == 2 then
+                            if MenuSuspCoilStage == 0 then
+                                money = money - 1000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 1 Coilovers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspCoilStage == 1 then
+                                money = money - 3000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 2 Coilovers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '3000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspCoilStage == 2 then
+                                money = money - 6000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 3 Coilovers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '6000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspCoilStage == 3 then
+                                money = money - 9000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Stage 4 Coilovers'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '9000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuSuspStage == 3 then
+                            if MenuSuspArmStage == 0 then
+                                money = money - 1000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Steering Angle Kit'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '1000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspArmStage == 1 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Suspension Component Replacement'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspArmStage == 2 then
+                                money = money - 20000
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Custom Suspension Geometry'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '20000'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        elseif MenuSuspStage == 4 then
+                            if MenuSuspOtherStage == 0 then
+                                money = money - 300
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'Rubber Bushings Kit'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '300'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            elseif MenuSuspOtherStage == 1 then
+                                money = money - 500
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 3] = 'OEM Shock Replacement'
+                                carModifications [GarageCarCycle + 1] [(tonumber(carModifications [GarageCarCycle + 1] [2]) * 2) + 4] = '500'
+                                carModifications [GarageCarCycle + 1] [2] = tonumber(carModifications [GarageCarCycle + 1] [2]) + 1
+                            end
+                        end
+                        
+                    end
+                    
+                    --- BACK ---
+
+                    ui.setCursorX(1920 - 450)
+                    ui.setCursorY(700)
+
+                    ui.image('https://i.postimg.cc/T3qSZxTR/RECTANGLE-BUTTON-PRUPLE.png',vec2(400,300))
+
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 2)
+                    ui.setCursorY(815 + 2)
+                    ui.textColored('BACK', rgbm(0.1,0.8,1,0.7))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300 + 1)
+                    ui.setCursorY(815 + 1)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.pushFont(ui.Font.Huge)
+                    ui.setCursorX(1920 - 300)
+                    ui.setCursorY(815)
+                    ui.textColored('BACK', rgbm(0.8,0,1,1))
+
+                    ui.setCursorX(1920 - 420)
+                    ui.setCursorY(786)
+
+                    if ui.invisibleButton('', vec2(340,130)) then
+                        MenuState = 20
                     end
 
 
@@ -5139,7 +8264,9 @@ function script.drawUI()
 
     end
 
-    if mainMenu == 1 and tempEnabled == 1 then
+    
+
+    if MainMenu == 1 and tempEnabled == 1 then
 
         ui.transparentWindow('TEMPWINDOW', vec2(0, 0), vec2(1920 / 3,1080 / 3 ), function ()
 
@@ -5328,7 +8455,7 @@ function script.drawUI()
         
         physics.setGentleStop(0, true)
         
-        mainMenu = 1
+        MainMenu = 1
         ui.transparentWindow('DIED', vec2(-20, -20), ui.windowSize() + vec2(20,20), function ()
 
             ui.pushFont(ui.Font.Huge)
@@ -5371,12 +8498,12 @@ function script.drawUI()
         end)
 
         if diedTime + 1 > os.clock() then
-            if deathPlayerChance == 0 then
-                deathSound0:play()
-            elseif deathPlayerChance == 1 then
-                deathSound1:play()
-            elseif deathPlayerChance == 2 then
-                deathSound2:play()
+            if DeathPlayerChance == 0 then
+                DeathSound0:play()
+            elseif DeathPlayerChance == 1 then
+                DeathSound1:play()
+            elseif DeathPlayerChance == 2 then
+                DeathSound2:play()
             end
         end
 
@@ -5403,6 +8530,6 @@ local transferMoney = ac.OnlineEvent({
 
 function TransferMoney()
 
-    transferMoney{ person = ac.getDriverName(transferPersonType), money = moneyTransfer }
+    transferMoney{ person = ac.getDriverName(TransferPersonType), money = moneyTransfer }
 
 end
