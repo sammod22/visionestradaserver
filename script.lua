@@ -827,7 +827,7 @@ local isOnFireChance = math.randomseed(sim.timeSeconds)
 
 function LoadChecking()
 
-    if loadCheckTimer + 2 > os.clock() then
+    if loadCheckTimer + 4 > os.clock() then
 
         CarStatsAmount = storedValues.carStatsAmount
         CarStats = StorageUnpackCarStatsNested(storedValues.carStats, storedValues.carStatsAmount)
@@ -898,13 +898,15 @@ function LoadChecking()
         end
 
         loadCheck = true
-    elseif loadCheckTimer + 2.5 > os.clock() and loadCheckTimer + 3 < os.clock() then
 
         physics.setCarFuel(0, CarStats[CarStatsSelected][2])
+    elseif loadCheckTimer + 2 > os.clock() and loadCheckTimer + 3.8 < os.clock() then
+        
         physics.setCarBodyDamage(0, vec4(CarStats[CarStatsSelected][3], CarStats[CarStatsSelected][4], CarStats[CarStatsSelected][5], CarStats[CarStatsSelected][6]))
         physics.setCarEngineLife(0, CarStats[CarStatsSelected][7])
         engineDamage = CarStats[CarStatsSelected][7]
         physics.blockTeleportingToPits()
+        
     end
 
     if ac.getTrackID() == "kanazawa" then
@@ -1001,9 +1003,14 @@ function script.update(dt)
             end
 
         end
-        Fuel()
+
+        if loadCheckTimer + 6 < os.clock() then
+            Fuel()
+        end
         TollManagement()
         SaveCarPosition()
+
+        
 
         Testing()
         ac.debug('Car Market', usedMarket)
@@ -1760,9 +1767,6 @@ function LoadCheckingCoords()
         coordLoadCheck = true
     end
 
-    physics.setCarFuel(0, storedValues.fuel)
-    physics.setCarEngineLife(0, storedValues.engineDamage)
-
     if mapAdvance == false then
 
         if storedValues.map0 == ac.getTrackID() and storedValues.calledTow == 0 and storedValues.carOrientationMap0X ~= 0 then
@@ -1773,7 +1777,6 @@ function LoadCheckingCoords()
             carOrientation.y = storedValues.carOrientationMap0Y
             carOrientation.z = storedValues.carOrientationMap0Z
             physics.setCarPosition(0, carPosition, carOrientation)
-            physics.setCarEngineLife(0, storedValues.engineDamage)
             storedValues.map0 = ac.getTrackID()
             mapType = 0
         elseif storedValues.map1 == ac.getTrackID() and storedValues.calledTow == 0 and storedValues.carOrientationMap1X ~= 0 then
@@ -1784,7 +1787,6 @@ function LoadCheckingCoords()
             carOrientation.y = storedValues.carOrientationMap1Y
             carOrientation.z = storedValues.carOrientationMap1Z
             physics.setCarPosition(0, carPosition, carOrientation)
-            physics.setCarEngineLife(0, storedValues.engineDamage)
             storedValues.map1 = ac.getTrackID()
             mapType = 1
         elseif storedValues.mapType == 0 then
@@ -1892,6 +1894,10 @@ function SaveCarPosition()
         justteleported = true
         teleporttimer = os.clock()
         teleportToPits = false
+    end
+
+    if sim.isPaused then
+        physics.blockTeleportingToPits()
     end
 
     if justteleported and teleporttimer + 0.01 < os.clock() then
