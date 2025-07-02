@@ -438,12 +438,18 @@ local carArray = {
 {'2000 Mitsubishi Lancer RS Evolution VI Tommi Makinen Edition', 'Manual', 25000, 70000, 2, 1, 'Scotia White', 1},
 
 {'2003 Mitsubishi Lancer Evolution VIII GSR', 'Manual', 15000, 30000, 11, 6, 'Red Solid', 8, 'Yellow Solid', 6, 'Medium Purple Mica', 7, 'White Solid', 35, 'Cool Silver Metallic', 26, 'Black Mica', 20},
+{'2003 Mitsubishi Lancer Evolution VIII RS [5M/T]', 'Manual', 35000, 65000, 3, 1, 'White Solid', 1},
+{'2003 Mitsubishi Lancer Evolution VIII RS [6M/T]', 'Manual', 50000, 120000, 1, 1, 'White Solid', 1},
 {'2004 Mitsubishi Lancer Evolution VIII MR GSR', 'Manual', 15000, 35000, 3, 4, 'Medium Purplish Gray Mica', 48, 'Cool Silver Metallic', 21, 'White Pearl', 24, 'Red Solid', 7},
 {'2004 Mitsubishi Lancer Evolution VIII MR GSR [Manufacturer Options]', 'Manual', 15000, 35000, 5, 4, 'Medium Purplish Gray Mica', 48, 'Cool Silver Metallic', 21, 'White Pearl', 24, 'Red Solid', 7},
+{'2004 Mitsubishi Lancer Evolution VIII MR RS [5M/T]', 'Manual', 50000, 80000, 2, 1, 'White Solid', 1},
+{'2004 Mitsubishi Lancer Evolution VIII MR RS [6M/T]', 'Manual', 70000, 150000, 1, 1, 'White Solid', 1},
 {'2005 Mitsubishi Lancer Evolution IX GSR', 'Manual', 20000, 50000, 9, 6, 'White Solid', 30, 'Yellow Solid', 4, 'Red Solid', 7, 'Blue Mica', 13, 'Black Mica', 20, 'Cool Silver Metallic', 26},
 {'2005 Mitsubishi Lancer Evolution IX GT', 'Manual', 20000, 50000, 5, 6, 'White Solid', 38, 'Yellow Solid', 6, 'Red Solid', 10, 'Blue Mica', 12, 'Black Mica', 13, 'Cool Silver Metallic', 21},
+{'2005 Mitsubishi Lancer Evolution IX RS', 'Manual', 40000, 70000, 3, 1, 'White Solid', 1},
 {'2006 Mitsubishi Lancer Evolution IX MR GSR', 'Manual', 25000, 55000, 2, 4, 'White Pearl', 35, 'Cool Silver Metallic', 14, 'Medium Purplish Gray Mica', 40, 'Red Solid', 11},
 {'2006 Mitsubishi Lancer Evolution IX MR GSR [Manufacturer Options]', 'Manual', 25000, 55000, 3, 4, 'White Pearl', 35, 'Cool Silver Metallic', 14, 'Medium Purplish Gray Mica', 40, 'Red Solid', 11},
+{'2006 Mitsubishi Lancer Evolution IX MR RS', 'Manual', 60000, 90000, 3, 2, 'White Solid', 81, 'Red Solid', 19},
 
 --- NISSAN ---
 
